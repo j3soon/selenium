@@ -78,7 +78,7 @@ jobs:
       - name: Cache Bazel artifacts
         uses: ./.github/actions/cache-bazel
         with:
-          workflow: ruby
+          workflow: ruby-integration-test
           key: ${{ matrix.browser }}-remote-${{ matrix.remote }}
       - name: Setup Fluxbox
         if: matrix.os == 'ubuntu-latest'
