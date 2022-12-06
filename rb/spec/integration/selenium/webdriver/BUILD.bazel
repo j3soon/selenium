@@ -38,6 +38,19 @@ rb_library(
     }),
 )
 
+rb_test(
+    name = "devtools",
+    srcs = ["devtools_spec.rb"],
+    args = ["rb/spec/integration/selenium/webdriver/devtools_spec.rb"],
+    env = ENV,
+    main = "@bundle//:bin/rspec",
+    tags = TAGS + ["exclusive"],  # DevTools is extremely flaky with port collisions
+    deps = [
+        ":spec_helper",
+        "@bundle",
+    ],
+)
+
 [
     rb_test(
         name = file[:-8],
@@ -51,5 +64,8 @@ rb_library(
             "@bundle",
         ],
     )
-    for file in glob(["*_spec.rb"])
+    for file in glob(
+        ["*_spec.rb"],
+        exclude = ["devtools_spec.rb"],
+    )
 ]

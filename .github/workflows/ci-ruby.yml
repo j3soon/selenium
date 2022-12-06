@@ -117,7 +117,6 @@ jobs:
             --define browser=${{ matrix.browser }}
             --define remote=${{ matrix.remote }}
             --flaky_test_attempts 3
-            --local_test_jobs=1
             rb/spec/integration/...
         env:
           DISPLAY: :99
