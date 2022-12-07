@@ -241,6 +241,7 @@ Supported browsers:
 * `firefox`
 * `ie`
 * `safari` (cannot be run in parallel - use `--local_test_jobs 1`)
+* `safari-preview` (cannot be run in parallel - use `--local_test_jobs 1`)
 
 Useful command line options:
 

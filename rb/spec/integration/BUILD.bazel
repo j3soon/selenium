@@ -6,6 +6,7 @@ BROWSERS = [
     "firefox",
     "ie",
     "safari",
+    "safari-preview",
 ]
 
 config_setting(

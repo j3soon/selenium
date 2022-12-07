@@ -14,6 +14,9 @@ ENV = select({
     "//rb/spec/integration:safari": {
         "WD_SPEC_DRIVER": "safari",
     },
+    "//rb/spec/integration:safari-preview": {
+        "WD_SPEC_DRIVER": "safari-preview",
+    },
     "//rb/spec/integration:remote-chrome": {
         "WD_REMOTE_BROWSER": "chrome",
         "WD_SPEC_DRIVER": "remote",
@@ -32,6 +35,10 @@ ENV = select({
     },
     "//rb/spec/integration:remote-safari": {
         "WD_REMOTE_BROWSER": "safari",
+        "WD_SPEC_DRIVER": "remote",
+    },
+    "//rb/spec/integration:remote-safari-preview": {
+        "WD_REMOTE_BROWSER": "Safari Technology Preview",
         "WD_SPEC_DRIVER": "remote",
     },
     "//conditions:default": {},

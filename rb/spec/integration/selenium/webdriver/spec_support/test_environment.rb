@@ -29,7 +29,7 @@ module Selenium
 
           WebDriver.logger
 
-          @driver = ENV.fetch('WD_SPEC_DRIVER', :chrome).to_sym
+          @driver = ENV.fetch('WD_SPEC_DRIVER', 'chrome').tr('-', '_').to_sym
           @driver_instance = nil
           @remote_server = nil
         end
@@ -158,6 +158,11 @@ module Selenium
         private
 
         def build_options(args: [], **opts)
+          browser = self.browser
+          if browser.to_s == 'Safari Technology Preview'
+            Selenium::WebDriver::Safari.technology_preview!
+            browser = :safari
+          end
           options_method = "#{browser}_options".to_sym
           if private_methods.include?(options_method)
             send(options_method, args: args, **opts)
