@@ -38,9 +38,10 @@ rb_library(
     }),
 )
 
-# DevTools tests are extremely flaky with port collisions
+# BiDi / DevTools tests are extremely flaky with port collisions
 # so they need extra "exclusive" tag
-DEVTOOLS_SPECS = [
+BIDI_SPECS = [
+    "bidi_spec.rb",
     "devtools_spec.rb",
     "virtual_authenticator_spec.rb",
 ]
@@ -60,7 +61,7 @@ DEVTOOLS_SPECS = [
     )
     for file in glob(
         ["*_spec.rb"],
-        exclude = DEVTOOLS_SPECS,
+        exclude = BIDI_SPECS,
     )
 ]
 
@@ -77,5 +78,5 @@ DEVTOOLS_SPECS = [
             "@bundle",
         ],
     )
-    for file in DEVTOOLS_SPECS
+    for file in BIDI_SPECS
 ]
