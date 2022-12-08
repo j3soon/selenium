@@ -38,14 +38,6 @@ rb_library(
     }),
 )
 
-# BiDi / DevTools tests are extremely flaky with port collisions
-# so they need extra "exclusive" tag
-BIDI_SPECS = [
-    "bidi_spec.rb",
-    "devtools_spec.rb",
-    "virtual_authenticator_spec.rb",
-]
-
 [
     rb_test(
         name = file[:-8],
@@ -59,24 +51,5 @@ BIDI_SPECS = [
             "@bundle",
         ],
     )
-    for file in glob(
-        ["*_spec.rb"],
-        exclude = BIDI_SPECS,
-    )
-]
-
-[
-    rb_test(
-        name = file[:-8],
-        srcs = [file],
-        args = ["rb/spec/integration/selenium/webdriver/" + file],
-        env = ENV,
-        main = "@bundle//:bin/rspec",
-        tags = TAGS + ["exclusive"],
-        deps = [
-            ":spec_helper",
-            "@bundle",
-        ],
-    )
-    for file in BIDI_SPECS
+    for file in glob(["*_spec.rb"])
 ]
