@@ -1,0 +1,23 @@
+name: Setup Bazel
+
+inputs:
+  bazelisk-cache:
+    description: Caches Bazelisk downloads based on .bazelversion
+    required: false
+    default: false
+  external-cache:
+    description: Cache external repositories
+    required: false
+    default: ""
+  cache-version:
+    description: Version of all caches
+    required: false
+    default: 1
+  repository-cache:
+    description: Cache repositories based on WORKSPACE
+    required: false
+    default: false
+
+runs:
+  using: node16
+  main: dist/index.js
