@@ -1,8 +1,9 @@
 const fs = require('fs')
 const core = require('@actions/core')
 const cache = require('@actions/cache')
-const exec = require('@actions/exec')
+// const exec = require('@actions/exec')
 const glob = require('@actions/glob')
+const YAML = require('yaml')
 
 async function run () {
   try {
@@ -28,6 +29,14 @@ async function setupBazel () {
   if (core.getBooleanInput('repository-cache')) {
     await setupRepositoryCache(baseCacheKey)
   }
+
+  const externalCache = YAML.parse(core.getInput('external-cache'))
+  if (externalCache) {
+    for (const path in externalCache) {
+      const files = Array(externalCache[path]).flat()
+      await setupExternalCache(path, files, baseCacheKey)
+    }
+  }
 }
 
 async function setupBazeliskCache (baseCacheKey) {
@@ -41,12 +50,6 @@ async function setupBazeliskCache (baseCacheKey) {
     console.log('Successfully restored Bazelisk cache')
   } else {
     console.log('Failed to restore Bazelisk cache')
-  }
-
-  await exec.exec('bazel', ['version'])
-
-  if (!result) {
-    await cache.saveCache(paths, key)
   }
 }
 
@@ -67,6 +70,21 @@ async function setupRepositoryCache (baseCacheKey) {
     console.log('Successfully restored repository cache')
   } else {
     console.log('Failed to restore repository cache')
+  }
+}
+
+async function setupExternalCache (path, files, baseCacheKey) {
+  const root = `${process.env.HOME}/.bazel/external/`
+  const hash = await glob.hashFiles(files.join('\n'))
+  const key = `${baseCacheKey}-external-${path}-${hash}`
+  const restoreKeys = [`${baseCacheKey}-external-${path}-`]
+  console.log(`External cache key: ${key}`)
+
+  const result = await cache.restoreCache([`${root}/${path}`], key, restoreKeys)
+  if (result) {
+    console.log('Successfully restored external cache')
+  } else {
+    console.log('Failed to restore external cache')
   }
 }
 
