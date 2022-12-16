@@ -69812,11 +69812,11 @@ var __webpack_exports__ = {};
 // This entry need to be wrapped in an IIFE because it need to be isolated against other modules in the chunk.
 (() => {
 const fs = __nccwpck_require__(7147)
+const yaml = __nccwpck_require__(90)
 const core = __nccwpck_require__(2186)
 const cache = __nccwpck_require__(7799)
 // const exec = require('@actions/exec')
 const glob = __nccwpck_require__(8090)
-const YAML = __nccwpck_require__(90)
 
 async function run () {
   try {
@@ -69843,7 +69843,7 @@ async function setupBazel () {
     await setupRepositoryCache(baseCacheKey)
   }
 
-  const externalCache = YAML.parse(core.getInput('external-cache'))
+  const externalCache = yaml.parse(core.getInput('external-cache'))
   if (externalCache) {
     for (const path in externalCache) {
       const files = Array(externalCache[path]).flat()

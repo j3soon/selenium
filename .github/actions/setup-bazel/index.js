@@ -1,9 +1,9 @@
 const fs = require('fs')
+const yaml = require('yaml')
 const core = require('@actions/core')
 const cache = require('@actions/cache')
 // const exec = require('@actions/exec')
 const glob = require('@actions/glob')
-const YAML = require('yaml')
 
 async function run () {
   try {
@@ -30,7 +30,7 @@ async function setupBazel () {
     await setupRepositoryCache(baseCacheKey)
   }
 
-  const externalCache = YAML.parse(core.getInput('external-cache'))
+  const externalCache = yaml.parse(core.getInput('external-cache'))
   if (externalCache) {
     for (const path in externalCache) {
       const files = Array(externalCache[path]).flat()
