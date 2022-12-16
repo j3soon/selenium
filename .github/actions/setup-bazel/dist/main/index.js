@@ -36,11 +36,11 @@ module.exports = {
   baseCacheKey: `setup-bazel-${cacheVersion}-${os.platform()}`,
   externalCache,
   paths: {
-    bazelExternal: core.toPlatformPath(`${bazelOutputBase}/external`),
-    bazelOutputBase: core.toPlatformPath(bazelOutputBase),
-    bazelRc: core.toPlatformPath(`${homeDir}/.bazelrc`),
-    bazelRepository: core.toPlatformPath(`${homeDir}/.cache/bazel-repo`),
-    bazelisk: core.toPlatformPath(`${userCacheDir}/bazelisk`)
+    bazelExternal: core.toPosixPath(`${bazelOutputBase}/external`),
+    bazelOutputBase: core.toPosixPath(bazelOutputBase),
+    bazelRc: core.toPosixPath(`${homeDir}/.bazelrc`),
+    bazelRepository: core.toPosixPath(`${homeDir}/.cache/bazel-repo`),
+    bazelisk: core.toPosixPath(`${userCacheDir}/bazelisk`)
   }
 }
 
@@ -69910,6 +69910,7 @@ async function setupRepositoryCache () {
   const hash = await glob.hashFiles([
     '**/BUILD.bazel',
     '**/BUILD',
+    'WORKSPACE.bazel',
     'WORKSPACE'
   ].join('\n'))
   const key = `${config.baseCacheKey}-repository-${hash}`

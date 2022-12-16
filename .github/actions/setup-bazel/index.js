@@ -51,6 +51,7 @@ async function setupRepositoryCache () {
   const hash = await glob.hashFiles([
     '**/BUILD.bazel',
     '**/BUILD',
+    'WORKSPACE.bazel',
     'WORKSPACE'
   ].join('\n'))
   const key = `${config.baseCacheKey}-repository-${hash}`

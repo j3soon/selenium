@@ -1,5 +1,5 @@
 {
-  "name": "y",
+  "name": "setup-bazel",
   "version": "0.1.0",
   "description": "Install and configure Bazel for GitHub Actions",
   "main": "index.js",
@@ -7,10 +7,7 @@
     "build": "ncc build index.js -o dist/main && ncc build post.js -o dist/post",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": {
-    "name": "Alex Rodionov",
-    "email": "p0deje@gmail.com"
-  },
+  "author": "Alex Rodionov <p0deje@gmail.com>",
   "license": "MIT",
   "dependencies": {
     "@actions/cache": "^3.1.0-beta.3",
