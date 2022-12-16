@@ -4,6 +4,7 @@
   "description": "Install and configure Bazel for GitHub Actions",
   "main": "index.js",
   "scripts": {
+    "build": "ncc build index.js -o dist/main && ncc build post.js -o dist/post",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Alex Rodionov <p0deje@gmail.com>",

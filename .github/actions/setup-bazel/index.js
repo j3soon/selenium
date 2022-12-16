@@ -47,8 +47,10 @@ async function setupBazeliskCache (baseCacheKey) {
 
   const result = await cache.restoreCache(paths, key)
   if (result) {
+    core.setOutput('bazelisk-cache-hit', true)
     console.log('Successfully restored Bazelisk cache')
   } else {
+    core.setOutput('bazelisk-cache-hit', false)
     console.log('Failed to restore Bazelisk cache')
   }
 }

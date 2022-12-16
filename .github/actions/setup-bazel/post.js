@@ -16,7 +16,10 @@ async function saveCaches () {
   const baseCacheKey = `setup-bazel-${cacheVersion}-${process.platform}`
   console.log(`Default cache key: ${baseCacheKey}`)
 
-  if (core.getBooleanInput('bazelisk-cache')) {
+  console.log(core.getInput('bazelisk-cache-hit'))
+  console.log(core.getBooleanInput('bazelisk-cache-hit'))
+
+  if (core.getBooleanInput('bazelisk-cache-hit')) {
     await saveBazeliskCache(baseCacheKey)
   }
 
