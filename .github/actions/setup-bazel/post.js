@@ -1,6 +1,6 @@
 const core = require('@actions/core')
 const cache = require('@actions/cache')
-const YAML = require('yaml')
+const config = require('./config')
 
 async function run () {
   try {
@@ -14,32 +14,31 @@ async function saveCaches () {
   await saveBazeliskCache()
   await saveRepositoryCache()
 
-  const externalCache = YAML.parse(core.getInput('external-cache'))
-  if (externalCache) {
-    for (const name in externalCache) {
-      await saveExternalCache(name)
-    }
+  for (const name in config.externalCache) {
+    await saveExternalCache(name)
   }
 }
 
 async function saveBazeliskCache () {
   await saveCache(
-    [`${process.env.HOME}/.cache/bazelisk`],
+    [config.paths.bazelisk],
     core.getState('bazelisk-cache-key')
   )
 }
 
 async function saveRepositoryCache () {
   await saveCache(
-    [`${process.env.HOME}/.cache/bazel-repo`],
+    [config.paths.bazelRepository],
     core.getState('repository-cache-key')
   )
 }
 
 async function saveExternalCache (name) {
-  const root = `${process.env.HOME}/.bazel/external/`
   await saveCache(
-    [`${root}/${name}`, `${root}/@${name}.marker`],
+    [
+      `${config.paths.bazelExternal}/@${name}.marker`,
+      `${config.paths.bazelExternal}/${name}`
+    ],
     core.getState(`external-${name}-cache-key`)
   )
 }

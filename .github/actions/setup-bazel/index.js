@@ -1,9 +1,8 @@
 const fs = require('fs')
-const yaml = require('yaml')
 const core = require('@actions/core')
 const cache = require('@actions/cache')
-// const exec = require('@actions/exec')
 const glob = require('@actions/glob')
+const config = require('./config')
 
 async function run () {
   try {
@@ -15,59 +14,56 @@ async function run () {
 
 async function setupBazel () {
   fs.writeFileSync(
-    `${process.env.HOME}/.bazelrc`,
-    `startup --output_base=${process.env.HOME}/.bazel\n`
+    config.paths.bazelRc,
+    `startup --output_base=${config.paths.bazelOutputBase}\n`
   )
-  const cacheVersion = core.getInput('cache-version')
-  const baseCacheKey = `setup-bazel-${cacheVersion}-${process.platform}`
-  console.log(`Default cache key: ${baseCacheKey}`)
 
   if (core.getBooleanInput('bazelisk-cache')) {
-    await setupBazeliskCache(baseCacheKey)
+    await setupBazeliskCache()
   }
 
   if (core.getBooleanInput('repository-cache')) {
-    await setupRepositoryCache(baseCacheKey)
+    fs.appendFileSync(
+      config.paths.bazelRc,
+      `build --repository_cache=${config.paths.bazelRepository}\n`
+    )
+    await setupRepositoryCache()
   }
 
-  const externalCache = yaml.parse(core.getInput('external-cache'))
-  if (externalCache) {
-    for (const name in externalCache) {
-      const files = Array(externalCache[name]).flat()
-      await setupExternalCache(name, files, baseCacheKey)
-    }
+  for (const name in config.externalCache) {
+    await setupExternalCache(name, config.externalCache[name])
   }
 }
 
-async function setupBazeliskCache (baseCacheKey) {
-  const paths = [`${process.env.HOME}/.cache/bazelisk`]
+async function setupBazeliskCache () {
+  const paths = [config.paths.bazelisk]
   const hash = await glob.hashFiles('.bazelversion')
-  const key = `${baseCacheKey}-bazelisk-${hash}`
+  const key = `${config.baseCacheKey}-bazelisk-${hash}`
 
   await restoreCache('bazelisk', paths, key)
 }
 
-async function setupRepositoryCache (baseCacheKey) {
-  const repositoryCachePath = `${process.env.HOME}/.cache/bazel-repo`
-  fs.appendFileSync(
-    `${process.env.HOME}/.bazelrc`,
-    `build --repository_cache=${repositoryCachePath}\n`
-  )
-
-  const paths = [repositoryCachePath]
-  const hash = await glob.hashFiles(['**/BUILD.bazel', '**/BUILD', 'WORKSPACE'].join('\n'))
-  const key = `${baseCacheKey}-repository-${hash}`
-  const restoreKeys = [`${baseCacheKey}-repository-`]
+async function setupRepositoryCache () {
+  const paths = [config.paths.bazelRepository]
+  const hash = await glob.hashFiles([
+    '**/BUILD.bazel',
+    '**/BUILD',
+    'WORKSPACE'
+  ].join('\n'))
+  const key = `${config.baseCacheKey}-repository-${hash}`
+  const restoreKeys = [`${config.baseCacheKey}-repository-`]
 
   await restoreCache('repository', paths, key, restoreKeys)
 }
 
-async function setupExternalCache (name, files, baseCacheKey) {
-  const root = `${process.env.HOME}/.bazel/external/`
-  const paths = [`${root}/${name}`, `${root}/@${name}.marker`]
+async function setupExternalCache (name, files) {
+  const paths = [
+    `${config.paths.bazelExternal}/@${name}.marker`,
+    `${config.paths.bazelExternal}/${name}`
+  ]
   const hash = await glob.hashFiles(files.join('\n'))
-  const key = `${baseCacheKey}-external-${name}-${hash}`
-  const restoreKeys = [`${baseCacheKey}-external-${name}-`]
+  const key = `${config.baseCacheKey}-external-${name}-${hash}`
+  const restoreKeys = [`${config.baseCacheKey}-external-${name}-`]
 
   await restoreCache(`external-${name}`, paths, key, restoreKeys)
 }

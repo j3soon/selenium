@@ -1,6 +1,56 @@
 /******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
+/***/ 5532:
+/***/ ((__unused_webpack_module, __webpack_exports__, __nccwpck_require__) => {
+
+"use strict";
+__nccwpck_require__.r(__webpack_exports__);
+/* harmony export */ __nccwpck_require__.d(__webpack_exports__, {
+/* harmony export */   "config": () => (/* binding */ config)
+/* harmony export */ });
+const os = __nccwpck_require__(2037)
+const yaml = __nccwpck_require__(90)
+const core = __nccwpck_require__(2186)
+
+const homeDir = os.homedir()
+const bazelOutputBase = `${homeDir}/.bazel`
+
+const cacheVersion = core.getInput('cache-version')
+const externalCacheConfig = yaml.parse(core.getInput('external-cache'))
+
+const externalCache = {}
+if (externalCacheConfig) {
+  for (const name in externalCacheConfig) {
+    externalCache[name] = Array(externalCacheConfig[name]).flat()
+  }
+}
+
+let userCacheDir = `${homeDir}/.cache`
+switch (os.type()) {
+  case 'Darwin':
+    userCacheDir = `${homeDir}/Library/Caches`
+    break
+  case 'Windows':
+    userCacheDir = `${homeDir}/AppData/Local`
+    break
+}
+
+const config = {
+  baseCacheKey: `setup-bazel-${cacheVersion}-${os.release()}`,
+  externalCache,
+  paths: {
+    bazelExternal: `${bazelOutputBase}/external`,
+    bazelOutputBase,
+    bazelRc: `${homeDir}/.bazelrc`,
+    bazelRepository: `${homeDir}/.cache/bazel-repo`,
+    bazelisk: `${userCacheDir}/bazelisk`
+  }
+}
+
+
+/***/ }),
+
 /***/ 7799:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
@@ -69803,6 +69853,34 @@ module.exports = JSON.parse('[[[0,44],"disallowed_STD3_valid"],[[45,46],"valid"]
 /******/ 	}
 /******/ 	
 /************************************************************************/
+/******/ 	/* webpack/runtime/define property getters */
+/******/ 	(() => {
+/******/ 		// define getter functions for harmony exports
+/******/ 		__nccwpck_require__.d = (exports, definition) => {
+/******/ 			for(var key in definition) {
+/******/ 				if(__nccwpck_require__.o(definition, key) && !__nccwpck_require__.o(exports, key)) {
+/******/ 					Object.defineProperty(exports, key, { enumerable: true, get: definition[key] });
+/******/ 				}
+/******/ 			}
+/******/ 		};
+/******/ 	})();
+/******/ 	
+/******/ 	/* webpack/runtime/hasOwnProperty shorthand */
+/******/ 	(() => {
+/******/ 		__nccwpck_require__.o = (obj, prop) => (Object.prototype.hasOwnProperty.call(obj, prop))
+/******/ 	})();
+/******/ 	
+/******/ 	/* webpack/runtime/make namespace object */
+/******/ 	(() => {
+/******/ 		// define __esModule on exports
+/******/ 		__nccwpck_require__.r = (exports) => {
+/******/ 			if(typeof Symbol !== 'undefined' && Symbol.toStringTag) {
+/******/ 				Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
+/******/ 			}
+/******/ 			Object.defineProperty(exports, '__esModule', { value: true });
+/******/ 		};
+/******/ 	})();
+/******/ 	
 /******/ 	/* webpack/runtime/compat */
 /******/ 	
 /******/ 	if (typeof __nccwpck_require__ !== 'undefined') __nccwpck_require__.ab = __dirname + "/";
@@ -69812,11 +69890,10 @@ var __webpack_exports__ = {};
 // This entry need to be wrapped in an IIFE because it need to be isolated against other modules in the chunk.
 (() => {
 const fs = __nccwpck_require__(7147)
-const yaml = __nccwpck_require__(90)
 const core = __nccwpck_require__(2186)
 const cache = __nccwpck_require__(7799)
-// const exec = require('@actions/exec')
 const glob = __nccwpck_require__(8090)
+const config = __nccwpck_require__(5532)
 
 async function run () {
   try {
@@ -69828,59 +69905,56 @@ async function run () {
 
 async function setupBazel () {
   fs.writeFileSync(
-    `${process.env.HOME}/.bazelrc`,
-    `startup --output_base=${process.env.HOME}/.bazel\n`
+    config.paths.bazelRc,
+    `startup --output_base=${config.paths.bazelOutputBase}\n`
   )
-  const cacheVersion = core.getInput('cache-version')
-  const baseCacheKey = `setup-bazel-${cacheVersion}-${process.platform}`
-  console.log(`Default cache key: ${baseCacheKey}`)
 
   if (core.getBooleanInput('bazelisk-cache')) {
-    await setupBazeliskCache(baseCacheKey)
+    await setupBazeliskCache()
   }
 
   if (core.getBooleanInput('repository-cache')) {
-    await setupRepositoryCache(baseCacheKey)
+    fs.appendFileSync(
+      config.paths.bazelRc,
+      `build --repository_cache=${config.paths.bazelRepository}\n`
+    )
+    await setupRepositoryCache()
   }
 
-  const externalCache = yaml.parse(core.getInput('external-cache'))
-  if (externalCache) {
-    for (const name in externalCache) {
-      const files = Array(externalCache[name]).flat()
-      await setupExternalCache(name, files, baseCacheKey)
-    }
+  for (const name in config.externalCache) {
+    await setupExternalCache(name, config.externalCache[name])
   }
 }
 
-async function setupBazeliskCache (baseCacheKey) {
-  const paths = [`${process.env.HOME}/.cache/bazelisk`]
+async function setupBazeliskCache () {
+  const paths = [config.paths.bazelisk]
   const hash = await glob.hashFiles('.bazelversion')
-  const key = `${baseCacheKey}-bazelisk-${hash}`
+  const key = `${config.baseCacheKey}-bazelisk-${hash}`
 
   await restoreCache('bazelisk', paths, key)
 }
 
-async function setupRepositoryCache (baseCacheKey) {
-  const repositoryCachePath = `${process.env.HOME}/.cache/bazel-repo`
-  fs.appendFileSync(
-    `${process.env.HOME}/.bazelrc`,
-    `build --repository_cache=${repositoryCachePath}\n`
-  )
-
-  const paths = [repositoryCachePath]
-  const hash = await glob.hashFiles(['**/BUILD.bazel', '**/BUILD', 'WORKSPACE'].join('\n'))
-  const key = `${baseCacheKey}-repository-${hash}`
-  const restoreKeys = [`${baseCacheKey}-repository-`]
+async function setupRepositoryCache () {
+  const paths = [config.paths.bazelRepository]
+  const hash = await glob.hashFiles([
+    '**/BUILD.bazel',
+    '**/BUILD',
+    'WORKSPACE'
+  ].join('\n'))
+  const key = `${config.baseCacheKey}-repository-${hash}`
+  const restoreKeys = [`${config.baseCacheKey}-repository-`]
 
   await restoreCache('repository', paths, key, restoreKeys)
 }
 
-async function setupExternalCache (name, files, baseCacheKey) {
-  const root = `${process.env.HOME}/.bazel/external/`
-  const paths = [`${root}/${name}`, `${root}/@${name}.marker`]
+async function setupExternalCache (name, files) {
+  const paths = [
+    `${config.paths.bazelExternal}/@${name}.marker`,
+    `${config.paths.bazelExternal}/${name}`
+  ]
   const hash = await glob.hashFiles(files.join('\n'))
-  const key = `${baseCacheKey}-external-${name}-${hash}`
-  const restoreKeys = [`${baseCacheKey}-external-${name}-`]
+  const key = `${config.baseCacheKey}-external-${name}-${hash}`
+  const restoreKeys = [`${config.baseCacheKey}-external-${name}-`]
 
   await restoreCache(`external-${name}`, paths, key, restoreKeys)
 }
