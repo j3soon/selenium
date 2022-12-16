@@ -8,9 +8,6 @@ const os = __nccwpck_require__(2037)
 const yaml = __nccwpck_require__(90)
 const core = __nccwpck_require__(2186)
 
-const homeDir = os.homedir()
-const bazelOutputBase = `${homeDir}/.bazel`
-
 const cacheVersion = core.getInput('cache-version')
 const externalCacheConfig = yaml.parse(core.getInput('external-cache'))
 
@@ -21,12 +18,16 @@ if (externalCacheConfig) {
   }
 }
 
+const homeDir = os.homedir()
+let bazelOutputBase = `${homeDir}/.bazel`
 let userCacheDir = `${homeDir}/.cache`
+
 switch (os.type()) {
   case 'Darwin':
     userCacheDir = `${homeDir}/Library/Caches`
     break
   case 'Windows':
+    bazelOutputBase = 'D:/_bazel'
     userCacheDir = `${homeDir}/AppData/Local`
     break
 }
@@ -35,11 +36,11 @@ module.exports = {
   baseCacheKey: `setup-bazel-${cacheVersion}-${os.platform()}`,
   externalCache,
   paths: {
-    bazelExternal: `${bazelOutputBase}/external`,
-    bazelOutputBase,
-    bazelRc: `${homeDir}/.bazelrc`,
-    bazelRepository: `${homeDir}/.cache/bazel-repo`,
-    bazelisk: `${userCacheDir}/bazelisk`
+    bazelExternal: core.toPlatformPath(`${bazelOutputBase}/external`),
+    bazelOutputBase: core.toPlatformPath(bazelOutputBase),
+    bazelRc: core.toPlatformPath(`${homeDir}/.bazelrc`),
+    bazelRepository: core.toPlatformPath(`${homeDir}/.cache/bazel-repo`),
+    bazelisk: core.toPlatformPath(`${userCacheDir}/bazelisk`)
   }
 }
 
