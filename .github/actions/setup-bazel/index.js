@@ -32,9 +32,9 @@ async function setupBazel () {
 
   const externalCache = yaml.parse(core.getInput('external-cache'))
   if (externalCache) {
-    for (const path in externalCache) {
-      const files = Array(externalCache[path]).flat()
-      await setupExternalCache(path, files, baseCacheKey)
+    for (const name in externalCache) {
+      const files = Array(externalCache[name]).flat()
+      await setupExternalCache(name, files, baseCacheKey)
     }
   }
 }
@@ -73,14 +73,16 @@ async function setupRepositoryCache (baseCacheKey) {
   }
 }
 
-async function setupExternalCache (path, files, baseCacheKey) {
+async function setupExternalCache (name, files, baseCacheKey) {
   const root = `${process.env.HOME}/.bazel/external/`
+  const paths = [`${root}/${name}`, `${root}/@${name}.marker`]
+
   const hash = await glob.hashFiles(files.join('\n'))
-  const key = `${baseCacheKey}-external-${path}-${hash}`
-  const restoreKeys = [`${baseCacheKey}-external-${path}-`]
+  const key = `${baseCacheKey}-external-${name}-${hash}`
+  const restoreKeys = [`${baseCacheKey}-external-${name}-`]
   console.log(`External cache key: ${key}`)
 
-  const result = await cache.restoreCache([`${root}/${path}`], key, restoreKeys)
+  const result = await cache.restoreCache(paths, key, restoreKeys)
   if (result) {
     console.log('Successfully restored external cache')
   } else {

@@ -69839,9 +69839,9 @@ async function saveCaches () {
 
   const externalCache = YAML.parse(core.getInput('external-cache'))
   if (externalCache) {
-    for (const path in externalCache) {
-      const files = Array(externalCache[path]).flat()
-      await saveExternalCache(path, files, baseCacheKey)
+    for (const name in externalCache) {
+      const files = Array(externalCache[name]).flat()
+      await saveExternalCache(name, files, baseCacheKey)
     }
   }
 }
@@ -69864,13 +69864,15 @@ async function saveRepositoryCache (baseCacheKey) {
   await cache.saveCache(paths, key)
 }
 
-async function saveExternalCache (path, files, baseCacheKey) {
+async function saveExternalCache (name, files, baseCacheKey) {
   const root = `${process.env.HOME}/.bazel/external/`
+  const paths = [`${root}/${name}`, `${root}/@${name}.marker`]
+
   const hash = await glob.hashFiles(files.join('\n'))
-  const key = `${baseCacheKey}-external-${path}-${hash}`
+  const key = `${baseCacheKey}-external-${name}-${hash}`
   console.log(`External cache key: ${key}`)
 
-  await cache.saveCache([`${root}/${path}`], key)
+  await cache.saveCache(paths, key)
 }
 
 run()
