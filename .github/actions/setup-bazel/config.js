@@ -26,7 +26,7 @@ switch (os.type()) {
 }
 
 module.exports = {
-  baseCacheKey: `setup-bazel-${cacheVersion}-${os.release()}`,
+  baseCacheKey: `setup-bazel-${cacheVersion}-${os.platform()}`,
   externalCache,
   paths: {
     bazelExternal: `${bazelOutputBase}/external`,
