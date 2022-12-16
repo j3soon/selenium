@@ -22,11 +22,11 @@ const homeDir = os.homedir()
 let bazelOutputBase = `${homeDir}/.bazel`
 let userCacheDir = `${homeDir}/.cache`
 
-switch (os.type()) {
-  case 'Darwin':
+switch (os.platform()) {
+  case 'darwin':
     userCacheDir = `${homeDir}/Library/Caches`
     break
-  case 'Windows':
+  case 'win32':
     bazelOutputBase = 'D:/_bazel'
     userCacheDir = `${homeDir}/AppData/Local`
     break
