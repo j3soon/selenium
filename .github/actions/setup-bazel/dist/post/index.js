@@ -68629,54 +68629,50 @@ const YAML = __nccwpck_require__(90)
 
 async function run () {
   try {
-    await saveCache()
+    await saveCaches()
   } catch (error) {
     core.warning(error.stack)
   }
 }
 
-async function saveCache () {
-  await saveBazeliskCache(core.getState('bazelisk-cache-key'))
-  await saveRepositoryCache(core.getState('repository-cache-key'))
+async function saveCaches () {
+  await saveBazeliskCache()
+  await saveRepositoryCache()
 
   const externalCache = YAML.parse(core.getInput('external-cache'))
   if (externalCache) {
     for (const name in externalCache) {
-      await saveExternalCache(name, core.getState(`external-${name}-cache-key`))
+      await saveExternalCache(name)
     }
   }
 }
 
-async function saveBazeliskCache (key) {
-  if (key.length === 0) {
-    return
-  }
-
-  console.log(`Bazelisk cache key: ${key}`)
-  const paths = [`${process.env.HOME}/.cache/bazelisk`]
-
-  await cache.saveCache(paths, key)
+async function saveBazeliskCache () {
+  await saveCache(
+    [`${process.env.HOME}/.cache/bazelisk`],
+    core.getState('bazelisk-cache-key')
+  )
 }
 
-async function saveRepositoryCache (key) {
-  if (key.length === 0) {
-    return
-  }
-
-  console.log(`Repository cache key: ${key}`)
-  const paths = [`${process.env.HOME}/.cache/bazel-repo`]
-
-  await cache.saveCache(paths, key)
+async function saveRepositoryCache () {
+  await saveCache(
+    [`${process.env.HOME}/.cache/bazel-repo`],
+    core.getState('repository-cache-key')
+  )
 }
 
-async function saveExternalCache (name, key) {
-  if (key.length === 0) {
-    return
-  }
-
-  console.log(`External cache key: ${key}`)
+async function saveExternalCache (name) {
   const root = `${process.env.HOME}/.bazel/external/`
-  const paths = [`${root}/${name}`, `${root}/@${name}.marker`]
+  await saveCache(
+    [`${root}/${name}`, `${root}/@${name}.marker`],
+    core.getState(`external-${name}-cache-key`)
+  )
+}
+
+async function saveCache (paths, key) {
+  if (key.length === 0) {
+    return
+  }
 
   await cache.saveCache(paths, key)
 }

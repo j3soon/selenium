@@ -64,6 +64,8 @@ jobs:
         with:
           bazelisk-cache: true
           external-cache: |
+            crates: rust/Cargo.Bazel.lock
+            go_sdk: WORKSPACE
             npm: package-lock.json
             rules_ruby_dist: rb/ruby_version.bzl
           repository-cache: true
