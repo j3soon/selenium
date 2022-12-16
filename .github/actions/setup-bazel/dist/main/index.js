@@ -69860,10 +69860,9 @@ async function setupBazeliskCache (baseCacheKey) {
 
   const result = await cache.restoreCache(paths, key)
   if (result) {
-    core.setOutput('bazelisk-cache-hit', true)
     console.log('Successfully restored Bazelisk cache')
   } else {
-    core.setOutput('bazelisk-cache-hit', false)
+    core.saveState('bazelisk-cache-key', key)
     console.log('Failed to restore Bazelisk cache')
   }
 }
@@ -69884,6 +69883,7 @@ async function setupRepositoryCache (baseCacheKey) {
   if (result) {
     console.log('Successfully restored repository cache')
   } else {
+    core.saveState('repository-cache-key', key)
     console.log('Failed to restore repository cache')
   }
 }
@@ -69901,6 +69901,7 @@ async function setupExternalCache (name, files, baseCacheKey) {
   if (result) {
     console.log('Successfully restored external cache')
   } else {
+    core.saveState(`external-cache-${name}-key`, key)
     console.log('Failed to restore external cache')
   }
 }
