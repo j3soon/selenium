@@ -43,15 +43,8 @@ async function setupBazeliskCache (baseCacheKey) {
   const paths = [`${process.env.HOME}/.cache/bazelisk`]
   const hash = await glob.hashFiles('.bazelversion')
   const key = `${baseCacheKey}-bazelisk-${hash}`
-  console.log(`Bazelisk cache key: ${key}`)
 
-  const result = await cache.restoreCache(paths, key)
-  if (result) {
-    console.log('Successfully restored Bazelisk cache')
-  } else {
-    core.saveState('bazelisk-cache-key', key)
-    console.log('Failed to restore Bazelisk cache')
-  }
+  await restoreCache('bazelisk', paths, key)
 }
 
 async function setupRepositoryCache (baseCacheKey) {
@@ -61,36 +54,38 @@ async function setupRepositoryCache (baseCacheKey) {
     `build --repository_cache=${repositoryCachePath}\n`
   )
 
+  const paths = [repositoryCachePath]
   const hash = await glob.hashFiles(['**/BUILD.bazel', '**/BUILD', 'WORKSPACE'].join('\n'))
   const key = `${baseCacheKey}-repository-${hash}`
   const restoreKeys = [`${baseCacheKey}-repository-`]
-  console.log(`Repository cache key: ${key}`)
 
-  const result = await cache.restoreCache([repositoryCachePath], key, restoreKeys)
-  if (result) {
-    console.log('Successfully restored repository cache')
-  } else {
-    core.saveState('repository-cache-key', key)
-    console.log('Failed to restore repository cache')
-  }
+  await restoreCache('repository', paths, key, restoreKeys)
 }
 
 async function setupExternalCache (name, files, baseCacheKey) {
   const root = `${process.env.HOME}/.bazel/external/`
   const paths = [`${root}/${name}`, `${root}/@${name}.marker`]
-
   const hash = await glob.hashFiles(files.join('\n'))
   const key = `${baseCacheKey}-external-${name}-${hash}`
   const restoreKeys = [`${baseCacheKey}-external-${name}-`]
-  console.log(`External cache key: ${key}`)
 
-  const result = await cache.restoreCache(paths, key, restoreKeys)
-  if (result) {
-    console.log('Successfully restored external cache')
+  await restoreCache(`external-${name}`, paths, key, restoreKeys)
+}
+
+async function restoreCache (name, paths, key, restoreKeys = []) {
+  console.log(`Attempting to restore ${name} cache from ${key}`)
+
+  const restoredKey = await cache.restoreCache(paths, key, restoreKeys)
+  if (restoredKey) {
+    console.log(`Successfully restored cache from ${restoredKey}`)
+    if (restoredKey === key) {
+      return
+    }
   } else {
-    core.saveState(`external-cache-${name}-key`, key)
-    console.log('Failed to restore external cache')
+    console.log(`Failed to restore ${name} cache`)
   }
+
+  core.saveState(`${name}-cache-key`, key)
 }
 
 run()

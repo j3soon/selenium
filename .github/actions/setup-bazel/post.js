@@ -17,7 +17,7 @@ async function saveCache () {
   const externalCache = YAML.parse(core.getInput('external-cache'))
   if (externalCache) {
     for (const name in externalCache) {
-      await saveExternalCache(name, core.getState(`external-cache-${name}-key`))
+      await saveExternalCache(name, core.getState(`external-${name}-cache-key`))
     }
   }
 }
