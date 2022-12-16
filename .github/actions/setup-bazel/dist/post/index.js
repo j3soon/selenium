@@ -68718,6 +68718,7 @@ async function saveCache (paths, key) {
     return
   }
 
+  console.log(`Saving cache ${key}`)
   await cache.saveCache(paths, key)
 }
 
