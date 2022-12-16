@@ -13,6 +13,9 @@ async function run () {
 }
 
 async function setupBazel () {
+  console.log('Setting up Bazel with:')
+  console.log(config)
+
   fs.writeFileSync(
     config.paths.bazelRc,
     `startup --output_base=${config.paths.bazelOutputBase}\n`

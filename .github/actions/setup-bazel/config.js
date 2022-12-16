@@ -25,7 +25,7 @@ switch (os.type()) {
     break
 }
 
-export const config = {
+module.exports = {
   baseCacheKey: `setup-bazel-${cacheVersion}-${os.release()}`,
   externalCache,
   paths: {
