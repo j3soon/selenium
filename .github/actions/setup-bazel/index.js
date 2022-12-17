@@ -16,6 +16,7 @@ async function setupBazel () {
   console.log('Setting up Bazel with:')
   console.log(config)
 
+  await optimizeCacheOnWindows()
   await setupBazelRc()
 
   if (core.getBooleanInput('bazelisk-cache')) {
@@ -29,6 +30,16 @@ async function setupBazel () {
   for (const name in config.externalCache) {
     await setupExternalCache(name, config.externalCache[name])
   }
+}
+
+async function optimizeCacheOnWindows () {
+  if (config.platform !== 'win32') {
+    return
+  }
+
+  // https://github.com/actions/cache/blob/main/tips-and-workarounds.md
+  core.addPath('C:\\Program Files\\Git\\usr\\bin')
+  core.exportVariable('MSYS', 'winsymlinks:native')
 }
 
 async function setupBazelRc () {

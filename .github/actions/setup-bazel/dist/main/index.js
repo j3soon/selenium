@@ -13,11 +13,13 @@ const cacheVersion = core.getInput('cache-version')
 const externalCacheConfig = yaml.parse(core.getInput('external-cache'))
 
 const homeDir = os.homedir()
+const platform = os.platform()
+
 const bazelRepository = core.toPosixPath(`${homeDir}/.cache/bazel-repo`)
 let bazelOutputBase = `${homeDir}/.bazel`
 let userCacheDir = `${homeDir}/.cache`
 
-switch (os.platform()) {
+switch (platform) {
   case 'darwin':
     userCacheDir = `${homeDir}/Library/Caches`
     break
@@ -55,7 +57,8 @@ module.exports = {
     bazelRc: core.toPosixPath(`${homeDir}/.bazelrc`),
     bazelRepository,
     bazelisk: core.toPosixPath(`${userCacheDir}/bazelisk`)
-  }
+  },
+  platform
 }
 
 
@@ -69889,6 +69892,7 @@ async function setupBazel () {
   console.log('Setting up Bazel with:')
   console.log(config)
 
+  await optimizeCacheOnWindows()
   await setupBazelRc()
 
   if (core.getBooleanInput('bazelisk-cache')) {
@@ -69902,6 +69906,16 @@ async function setupBazel () {
   for (const name in config.externalCache) {
     await setupExternalCache(name, config.externalCache[name])
   }
+}
+
+async function optimizeCacheOnWindows () {
+  if (config.platform !== 'win32') {
+    return
+  }
+
+  // https://github.com/actions/cache/blob/main/tips-and-workarounds.md
+  core.addPath('C:\\Program Files\\Git\\usr\\bin')
+  core.exportVariable('MSYS', 'winsymlinks:native')
 }
 
 async function setupBazelRc () {

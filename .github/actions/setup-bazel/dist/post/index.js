@@ -13,11 +13,13 @@ const cacheVersion = core.getInput('cache-version')
 const externalCacheConfig = yaml.parse(core.getInput('external-cache'))
 
 const homeDir = os.homedir()
+const platform = os.platform()
+
 const bazelRepository = core.toPosixPath(`${homeDir}/.cache/bazel-repo`)
 let bazelOutputBase = `${homeDir}/.bazel`
 let userCacheDir = `${homeDir}/.cache`
 
-switch (os.platform()) {
+switch (platform) {
   case 'darwin':
     userCacheDir = `${homeDir}/Library/Caches`
     break
@@ -55,7 +57,8 @@ module.exports = {
     bazelRc: core.toPosixPath(`${homeDir}/.bazelrc`),
     bazelRepository,
     bazelisk: core.toPosixPath(`${userCacheDir}/bazelisk`)
-  }
+  },
+  platform
 }
 
 
