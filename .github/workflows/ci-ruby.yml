@@ -73,7 +73,7 @@ jobs:
             python_3_*: WORKSPACE
             rules_ruby_dist: rb/ruby_version.bzl
             rust_*_tools: WORKSPACE
-          google-credentials: ${{ secrets.GOOGLE_CLOUD_STORAGE_KEY }}
+          # google-credentials: ${{ secrets.GOOGLE_CLOUD_STORAGE_KEY }}
           repository-cache: true
       - name: Setup Java
         uses: actions/setup-java@v3
