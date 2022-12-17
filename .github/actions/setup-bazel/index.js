@@ -37,8 +37,7 @@ async function optimizeCacheOnWindows () {
     return
   }
 
-  // https://github.com/actions/cache/blob/main/tips-and-workarounds.md
-  core.addPath('C:\\Program Files\\Git\\usr\\bin')
+  // Bazel relies heavily on symlinks.
   core.exportVariable('MSYS', 'winsymlinks:native')
 }
 
