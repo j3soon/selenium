@@ -64,14 +64,13 @@ jobs:
         with:
           bazelisk-cache: true
           bazelrc: |
-            build:
-              google_credentials: ${{ secrets.GOOGLE_CLOUD_STORAGE_KEY }}
-              remote_upload_local_results: ${{ github.ref == 'refs/heads/trunk' }}
+            build --remote_upload_local_results=${{ github.ref == 'refs/heads/setup-bazel' }}
           external-cache: |
             crates: rust/Cargo.Bazel.lock
             go_sdk: WORKSPACE
             npm: package-lock.json
             rules_ruby_dist: rb/ruby_version.bzl
+          google-credentials: ${{ secrets.GOOGLE_CLOUD_STORAGE_KEY }}
           repository-cache: true
       - name: Setup Java
         uses: actions/setup-java@v3

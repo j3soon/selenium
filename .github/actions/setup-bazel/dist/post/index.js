@@ -4,11 +4,11 @@
 /***/ 5532:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
+const fs = __nccwpck_require__(7147)
 const os = __nccwpck_require__(2037)
 const yaml = __nccwpck_require__(90)
 const core = __nccwpck_require__(2186)
 
-const bazelRcConfig = yaml.parse(core.getInput('bazelrc'))
 const cacheVersion = core.getInput('cache-version')
 const externalCacheConfig = yaml.parse(core.getInput('external-cache'))
 
@@ -29,15 +29,20 @@ switch (platform) {
     break
 }
 
-const bazelRc = { build: {} }
-// if (bazelRcConfig) {
-//   for (const command in bazelRcConfig) {
-//     bazelRc[command] = bazelRcConfig[command]
-//   }
-// }
+const bazelrc = core.getMultilineInput('bazelrc')
 
 if (core.getBooleanInput('repository-cache')) {
-  bazelRc.build.repository_cache = bazelRepository
+  bazelrc.push(`build --repository_cache=${bazelRepository}`)
+}
+
+const googleCredentials = core.getInput('google-credentials')
+const googleCredentialsSaved = (core.getState('google-credentials-path').length > 0)
+if (googleCredentials.length > 0 && !googleCredentialsSaved) {
+  const tmpDir = fs.mkdtempSync(os.tmpdir())
+  const googleCredentialsPath = `${tmpDir}/key.json`
+  fs.writeFileSync(googleCredentialsPath, googleCredentials)
+  bazelrc.push(`build --google_credentials=${googleCredentialsPath}`)
+  core.saveState('google-credentials-path', googleCredentialsPath)
 }
 
 const externalCache = {}
@@ -49,12 +54,12 @@ if (externalCacheConfig) {
 
 module.exports = {
   baseCacheKey: `setup-bazel-${cacheVersion}-${os.platform()}`,
-  bazelRc,
+  bazelrc,
   externalCache,
   paths: {
     bazelExternal: core.toPosixPath(`${bazelOutputBase}/external`),
     bazelOutputBase: core.toPosixPath(bazelOutputBase),
-    bazelRc: core.toPosixPath(`${homeDir}/.bazelrc`),
+    bazelrc: core.toPosixPath(`${homeDir}/.bazelrc`),
     bazelRepository,
     bazelisk: core.toPosixPath(`${userCacheDir}/bazelisk`)
   },

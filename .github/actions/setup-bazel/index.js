@@ -17,7 +17,7 @@ async function setupBazel () {
   console.log(config)
 
   await optimizeCacheOnWindows()
-  await setupBazelRc()
+  await setupBazelrc()
 
   if (core.getBooleanInput('bazelisk-cache')) {
     await setupBazeliskCache()
@@ -42,19 +42,14 @@ async function optimizeCacheOnWindows () {
   core.exportVariable('MSYS', 'winsymlinks:native')
 }
 
-async function setupBazelRc () {
+async function setupBazelrc () {
   fs.writeFileSync(
-    config.paths.bazelRc,
+    config.paths.bazelrc,
     `startup --output_base=${config.paths.bazelOutputBase}\n`
   )
 
-  for (const command in config.bazelRc) {
-    for (const flag in config.bazelRc[command]) {
-      fs.appendFileSync(
-        config.paths.bazelRc,
-        `${command} --${flag}=${config.bazelRc[command][flag]}\n`
-      )
-    }
+  for (const line of config.bazelrc) {
+    fs.appendFileSync(config.paths.bazelrc, `${line}\n`)
   }
 }
 
