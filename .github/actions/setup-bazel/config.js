@@ -23,7 +23,7 @@ switch (platform) {
     break
 }
 
-const bazelRc = {}
+const bazelRc = { build: {} }
 // if (bazelRcConfig) {
 //   for (const command in bazelRcConfig) {
 //     bazelRc[command] = bazelRcConfig[command]
