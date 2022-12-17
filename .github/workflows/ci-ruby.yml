@@ -55,7 +55,7 @@ jobs:
       fail-fast: false
       matrix:
         target: [ 'remote-chrome-test' ]
-        os: [ 'windows-latest'  ]
+        os: [ 'ubuntu-latest'  ]
     steps:
       - name: Checkout source tree
         uses: actions/checkout@v3
@@ -70,7 +70,9 @@ jobs:
             crates: rust/Cargo.Bazel.lock
             go_sdk: WORKSPACE
             npm: package-lock.json
+            python_3_*: WORKSPACE
             rules_ruby_dist: rb/ruby_version.bzl
+            rust_*_tools: WORKSPACE
           google-credentials: ${{ secrets.GOOGLE_CLOUD_STORAGE_KEY }}
           repository-cache: true
       - name: Setup Java

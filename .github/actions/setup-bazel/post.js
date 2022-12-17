@@ -1,5 +1,6 @@
-const core = require('@actions/core')
 const cache = require('@actions/cache')
+const core = require('@actions/core')
+const glob = require('@actions/glob')
 const config = require('./config')
 
 async function run () {
@@ -34,11 +35,13 @@ async function saveRepositoryCache () {
 }
 
 async function saveExternalCache (name) {
+  const globber = await glob.create([
+    `${config.paths.bazelExternal}/@${name}.marker`,
+    `${config.paths.bazelExternal}/${name}`
+  ].join('\n'))
+
   await saveCache(
-    [
-      `${config.paths.bazelExternal}/@${name}.marker`,
-      `${config.paths.bazelExternal}/${name}`
-    ],
+    await globber.glob(),
     core.getState(`external-${name}-cache-key`)
   )
 }
