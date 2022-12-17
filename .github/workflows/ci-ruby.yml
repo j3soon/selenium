@@ -63,6 +63,10 @@ jobs:
         uses: ./.github/actions/setup-bazel
         with:
           bazelisk-cache: true
+          bazelrc: |
+            build:
+              google_credentials: ${{ secrets.GOOGLE_CLOUD_STORAGE_KEY }}
+              remote_upload_local_results: ${{ github.ref == 'refs/heads/setup-bazel' }}
           external-cache: |
             crates: rust/Cargo.Bazel.lock
             go_sdk: WORKSPACE

@@ -8,17 +8,12 @@ const os = __nccwpck_require__(2037)
 const yaml = __nccwpck_require__(90)
 const core = __nccwpck_require__(2186)
 
+const bazelRcConfig = yaml.parse(core.getInput('bazelrc'))
 const cacheVersion = core.getInput('cache-version')
 const externalCacheConfig = yaml.parse(core.getInput('external-cache'))
 
-const externalCache = {}
-if (externalCacheConfig) {
-  for (const name in externalCacheConfig) {
-    externalCache[name] = Array(externalCacheConfig[name]).flat()
-  }
-}
-
 const homeDir = os.homedir()
+const bazelRepository = core.toPosixPath(`${homeDir}/.cache/bazel-repo`)
 let bazelOutputBase = `${homeDir}/.bazel`
 let userCacheDir = `${homeDir}/.cache`
 
@@ -32,14 +27,33 @@ switch (os.platform()) {
     break
 }
 
+const bazelRc = {}
+if (bazelRcConfig) {
+  for (const command in bazelRcConfig) {
+    bazelRc[command] = bazelRcConfig[command]
+  }
+}
+
+if (core.getBooleanInput('repository-cache')) {
+  bazelRc.build.repository_cache = bazelRepository
+}
+
+const externalCache = {}
+if (externalCacheConfig) {
+  for (const name in externalCacheConfig) {
+    externalCache[name] = Array(externalCacheConfig[name]).flat()
+  }
+}
+
 module.exports = {
   baseCacheKey: `setup-bazel-${cacheVersion}-${os.platform()}`,
+  bazelRc,
   externalCache,
   paths: {
     bazelExternal: core.toPosixPath(`${bazelOutputBase}/external`),
     bazelOutputBase: core.toPosixPath(bazelOutputBase),
     bazelRc: core.toPosixPath(`${homeDir}/.bazelrc`),
-    bazelRepository: core.toPosixPath(`${homeDir}/.cache/bazel-repo`),
+    bazelRepository,
     bazelisk: core.toPosixPath(`${userCacheDir}/bazelisk`)
   }
 }
@@ -69875,25 +69889,34 @@ async function setupBazel () {
   console.log('Setting up Bazel with:')
   console.log(config)
 
-  fs.writeFileSync(
-    config.paths.bazelRc,
-    `startup --output_base=${config.paths.bazelOutputBase}\n`
-  )
+  await setupBazelRc()
 
   if (core.getBooleanInput('bazelisk-cache')) {
     await setupBazeliskCache()
   }
 
   if (core.getBooleanInput('repository-cache')) {
-    fs.appendFileSync(
-      config.paths.bazelRc,
-      `build --repository_cache=${config.paths.bazelRepository}\n`
-    )
     await setupRepositoryCache()
   }
 
   for (const name in config.externalCache) {
     await setupExternalCache(name, config.externalCache[name])
+  }
+}
+
+async function setupBazelRc () {
+  fs.writeFileSync(
+    config.paths.bazelRc,
+    `startup --output_base=${config.paths.bazelOutputBase}\n`
+  )
+
+  for (const command in config.bazelRc) {
+    for (const flag in config.bazelRc[command]) {
+      fs.appendFileSync(
+        config.paths.bazelRc,
+        `${command} --${flag}=${config.bazelRc[command][flag]}\n`
+      )
+    }
   }
 }
 

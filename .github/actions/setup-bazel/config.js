@@ -2,17 +2,12 @@ const os = require('os')
 const yaml = require('yaml')
 const core = require('@actions/core')
 
+const bazelRcConfig = yaml.parse(core.getInput('bazelrc'))
 const cacheVersion = core.getInput('cache-version')
 const externalCacheConfig = yaml.parse(core.getInput('external-cache'))
 
-const externalCache = {}
-if (externalCacheConfig) {
-  for (const name in externalCacheConfig) {
-    externalCache[name] = Array(externalCacheConfig[name]).flat()
-  }
-}
-
 const homeDir = os.homedir()
+const bazelRepository = core.toPosixPath(`${homeDir}/.cache/bazel-repo`)
 let bazelOutputBase = `${homeDir}/.bazel`
 let userCacheDir = `${homeDir}/.cache`
 
@@ -26,14 +21,33 @@ switch (os.platform()) {
     break
 }
 
+const bazelRc = {}
+if (bazelRcConfig) {
+  for (const command in bazelRcConfig) {
+    bazelRc[command] = bazelRcConfig[command]
+  }
+}
+
+if (core.getBooleanInput('repository-cache')) {
+  bazelRc.build.repository_cache = bazelRepository
+}
+
+const externalCache = {}
+if (externalCacheConfig) {
+  for (const name in externalCacheConfig) {
+    externalCache[name] = Array(externalCacheConfig[name]).flat()
+  }
+}
+
 module.exports = {
   baseCacheKey: `setup-bazel-${cacheVersion}-${os.platform()}`,
+  bazelRc,
   externalCache,
   paths: {
     bazelExternal: core.toPosixPath(`${bazelOutputBase}/external`),
     bazelOutputBase: core.toPosixPath(bazelOutputBase),
     bazelRc: core.toPosixPath(`${homeDir}/.bazelrc`),
-    bazelRepository: core.toPosixPath(`${homeDir}/.cache/bazel-repo`),
+    bazelRepository,
     bazelisk: core.toPosixPath(`${userCacheDir}/bazelisk`)
   }
 }

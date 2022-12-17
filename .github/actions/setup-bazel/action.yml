@@ -5,14 +5,22 @@ inputs:
     description: Caches Bazelisk downloads based on .bazelversion
     required: false
     default: false
+  bazelrc:
+    description: Extra configuration to set in user .bazelrc
+    required: false
+    default: ""
   external-cache:
-    description: Cache external repositories
+    description: Cache external repositories configuration
     required: false
     default: ""
   cache-version:
     description: Version of all caches
     required: false
     default: 1
+  repository-cache-key:
+    description: Cache repositories based on WORKSPACE
+    required: false
+    default: false
   repository-cache:
     description: Cache repositories based on WORKSPACE
     required: false

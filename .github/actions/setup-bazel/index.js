@@ -16,25 +16,34 @@ async function setupBazel () {
   console.log('Setting up Bazel with:')
   console.log(config)
 
-  fs.writeFileSync(
-    config.paths.bazelRc,
-    `startup --output_base=${config.paths.bazelOutputBase}\n`
-  )
+  await setupBazelRc()
 
   if (core.getBooleanInput('bazelisk-cache')) {
     await setupBazeliskCache()
   }
 
   if (core.getBooleanInput('repository-cache')) {
-    fs.appendFileSync(
-      config.paths.bazelRc,
-      `build --repository_cache=${config.paths.bazelRepository}\n`
-    )
     await setupRepositoryCache()
   }
 
   for (const name in config.externalCache) {
     await setupExternalCache(name, config.externalCache[name])
+  }
+}
+
+async function setupBazelRc () {
+  fs.writeFileSync(
+    config.paths.bazelRc,
+    `startup --output_base=${config.paths.bazelOutputBase}\n`
+  )
+
+  for (const command in config.bazelRc) {
+    for (const flag in config.bazelRc[command]) {
+      fs.appendFileSync(
+        config.paths.bazelRc,
+        `${command} --${flag}=${config.bazelRc[command][flag]}\n`
+      )
+    }
   }
 }
 
