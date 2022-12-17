@@ -64,6 +64,7 @@ jobs:
         with:
           bazelisk-cache: true
           bazelrc: |
+            build --remote_cache=https://storage.googleapis.com/seleniumhq-bazel-remote-cache
             build --remote_upload_local_results=${{ github.ref == 'refs/heads/setup-bazel' }}
           external-cache: |
             crates: rust/Cargo.Bazel.lock
