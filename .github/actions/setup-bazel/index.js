@@ -75,12 +75,7 @@ async function setupRepositoryCache () {
 }
 
 async function setupExternalCache (name, files) {
-  const globber = await glob.create([
-    `${config.paths.bazelExternal}/@${name}.marker`,
-    `${config.paths.bazelExternal}/${name}`
-  ].join('\n'))
-  const paths = await globber.glob()
-
+  const paths = [config.paths.bazelExternal]
   const hash = await glob.hashFiles(files.join('\n'))
   const key = `${config.baseCacheKey}-external-${name}-${hash}`
   const restoreKeys = [`${config.baseCacheKey}-external-${name}-`]
