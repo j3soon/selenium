@@ -24,11 +24,11 @@ switch (platform) {
 }
 
 const bazelRc = {}
-if (bazelRcConfig) {
-  for (const command in bazelRcConfig) {
-    bazelRc[command] = bazelRcConfig[command]
-  }
-}
+// if (bazelRcConfig) {
+//   for (const command in bazelRcConfig) {
+//     bazelRc[command] = bazelRcConfig[command]
+//   }
+// }
 
 if (core.getBooleanInput('repository-cache')) {
   bazelRc.build.repository_cache = bazelRepository
