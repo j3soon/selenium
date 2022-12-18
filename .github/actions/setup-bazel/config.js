@@ -48,14 +48,25 @@ if (externalCacheConfig) {
 
 module.exports = {
   baseCacheKey: `setup-bazel-${cacheVersion}-${os.platform()}`,
+  bazeliskCache: {
+    files: ['.bazelversion'],
+    paths: [core.toPosixPath(`${userCacheDir}/bazelisk`)]
+  },
   bazelrc,
   externalCache,
   paths: {
     bazelExternal: core.toPosixPath(`${bazelOutputBase}/external`),
     bazelOutputBase: core.toPosixPath(bazelOutputBase),
-    bazelrc: core.toPosixPath(`${homeDir}/.bazelrc`),
-    bazelRepository,
-    bazelisk: core.toPosixPath(`${userCacheDir}/bazelisk`)
+    bazelrc: core.toPosixPath(`${homeDir}/.bazelrc`)
+  },
+  repositoryCache: {
+    files: [
+      '**/BUILD.bazel',
+      '**/BUILD',
+      'WORKSPACE.bazel',
+      'WORKSPACE'
+    ],
+    paths: [bazelRepository]
   },
   platform
 }
