@@ -13,11 +13,13 @@ async function run () {
 }
 
 async function setupBazel () {
-  console.log('Setting up Bazel with:')
+  core.startGroup('Configure Bazel')
+  console.log('Configuration:')
   console.log(config)
 
   await optimizeCacheOnWindows()
   await setupBazelrc()
+  core.endGroup()
 
   if (core.getBooleanInput('bazelisk-cache')) {
     await restoreCache(config.bazeliskCache)
@@ -38,6 +40,7 @@ async function optimizeCacheOnWindows () {
   }
 
   // Bazel relies heavily on symlinks.
+  console.log('Enabling native symlinks support')
   core.exportVariable('MSYS', 'winsymlinks:native')
 }
 
@@ -53,6 +56,8 @@ async function setupBazelrc () {
 }
 
 async function restoreCache (cacheConfig) {
+  core.startGroup(`Restore cache for ${cacheConfig.name}`)
+
   const hash = await glob.hashFiles(cacheConfig.files.join('\n'))
   const name = cacheConfig.name
   const paths = cacheConfig.paths
@@ -64,14 +69,15 @@ async function restoreCache (cacheConfig) {
   const restoredKey = await cache.restoreCache(paths, key, [restoreKey])
   if (restoredKey) {
     console.log(`Successfully restored cache from ${restoredKey}`)
-    if (restoredKey === key) {
-      return
+    if (restoredKey !== key) {
+      core.saveState(`${name}-cache-key`, key)
     }
   } else {
     console.log(`Failed to restore ${name} cache`)
+    core.saveState(`${name}-cache-key`, key)
   }
 
-  core.saveState(`${name}-cache-key`, key)
+  core.endGroup()
 }
 
 run()

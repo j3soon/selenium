@@ -54,7 +54,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        target: [ 'chrome-test' ]
+        target: [ 'unit-test' ]
         os: [ 'ubuntu-latest'  ]
     steps:
       - name: Checkout source tree

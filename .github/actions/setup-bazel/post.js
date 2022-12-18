@@ -35,7 +35,7 @@ async function saveExternalCache (cacheConfig) {
 
   await saveCache(
     paths,
-    core.getState(`external-${cacheConfig.name}-cache-key`)
+    core.getState(`${cacheConfig.name}-cache-key`)
   )
 }
 
