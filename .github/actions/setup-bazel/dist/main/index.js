@@ -51,7 +51,7 @@ if (externalCacheConfig) {
   for (const name in externalCacheConfig) {
     externalCache[name] = {
       files: Array(externalCacheConfig[name]).flat(),
-      name: name.replace('*', ''),
+      name: `external-${name.replace('*', '')}`,
       paths: [
         `${bazelExternal}/@${name}.marker`,
         `${bazelExternal}/${name}`
@@ -69922,15 +69922,15 @@ async function setupBazel () {
   await setupBazelrc()
 
   if (core.getBooleanInput('bazelisk-cache')) {
-    await restoreBazeliskCache()
+    await restoreCache(config.bazeliskCache)
   }
 
   if (core.getBooleanInput('repository-cache')) {
-    await restoreRepositoryCache()
+    await restoreCache(config.repositoryCache)
   }
 
   for (const name in config.externalCache) {
-    await restoreExternalCache(config.externalCache[name])
+    await restoreCache(config.externalCache[name])
   }
 }
 
@@ -69954,36 +69954,16 @@ async function setupBazelrc () {
   }
 }
 
-async function restoreBazeliskCache () {
-  const paths = config.bazeliskCache.paths
-  const hash = await glob.hashFiles(config.bazeliskCache.files.join('\n'))
-  const key = `${config.baseCacheKey}-bazelisk-${hash}`
-
-  await restoreCache(config.bazeliskCache.name, paths, key)
-}
-
-async function restoreRepositoryCache () {
-  const paths = config.repositoryCache.paths
-  const hash = await glob.hashFiles(config.repositoryCache.files.join('\n'))
-  const key = `${config.baseCacheKey}-repository-${hash}`
-  const restoreKeys = [`${config.baseCacheKey}-repository-`]
-
-  await restoreCache('repository', paths, key, restoreKeys)
-}
-
-async function restoreExternalCache (cacheConfig) {
-  const paths = [`${config.paths.bazelExternal}/${cacheConfig.name}`]
+async function restoreCache (cacheConfig) {
   const hash = await glob.hashFiles(cacheConfig.files.join('\n'))
-  const key = `${config.baseCacheKey}-external-${cacheConfig.name}-${hash}`
-  const restoreKeys = [`${config.baseCacheKey}-external-${cacheConfig.name}-`]
+  const name = cacheConfig.name
+  const paths = cacheConfig.paths
+  const restoreKey = `${config.baseCacheKey}-${name}-`
+  const key = `${restoreKey}-${hash}`
 
-  await restoreCache(`external-${cacheConfig.name}`, paths, key, restoreKeys)
-}
-
-async function restoreCache (name, paths, key, restoreKeys = []) {
   console.log(`Attempting to restore ${name} cache from ${key}`)
 
-  const restoredKey = await cache.restoreCache(paths, key, restoreKeys)
+  const restoredKey = await cache.restoreCache(paths, key, [restoreKey])
   if (restoredKey) {
     console.log(`Successfully restored cache from ${restoredKey}`)
     if (restoredKey === key) {

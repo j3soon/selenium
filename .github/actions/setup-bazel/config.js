@@ -45,7 +45,7 @@ if (externalCacheConfig) {
   for (const name in externalCacheConfig) {
     externalCache[name] = {
       files: Array(externalCacheConfig[name]).flat(),
-      name: name.replace('*', ''),
+      name: `external-${name.replace('*', '')}`,
       paths: [
         `${bazelExternal}/@${name}.marker`,
         `${bazelExternal}/${name}`

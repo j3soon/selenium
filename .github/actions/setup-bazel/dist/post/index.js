@@ -51,7 +51,7 @@ if (externalCacheConfig) {
   for (const name in externalCacheConfig) {
     externalCache[name] = {
       files: Array(externalCacheConfig[name]).flat(),
-      name: name.replace('*', ''),
+      name: `external-${name.replace('*', '')}`,
       paths: [
         `${bazelExternal}/@${name}.marker`,
         `${bazelExternal}/${name}`
@@ -69914,30 +69914,19 @@ async function run () {
 }
 
 async function saveCaches () {
-  await saveBazeliskCache()
-  await saveRepositoryCache()
+  await saveCache(config.bazeliskCache.paths, core.getState('bazelisk-cache-key'))
+  await saveCache(config.repositoryCache.paths, core.getState('repository-cache-key'))
 
   for (const name in config.externalCache) {
-    await saveExternalCache(name, config.externalCache[name])
+    await saveExternalCache(config.externalCache[name])
   }
 }
 
-async function saveBazeliskCache () {
-  await saveCache(
-    config.bazeliskCache.paths,
-    core.getState('bazelisk-cache-key')
-  )
-}
-
-async function saveRepositoryCache () {
-  await saveCache(
-    config.repositoryCache.paths,
-    core.getState('repository-cache-key')
-  )
-}
-
 async function saveExternalCache (cacheConfig) {
-  const globber = await glob.create(cacheConfig.paths.join('\n'), { implicitDescendants: false })
+  const globber = await glob.create(
+    cacheConfig.paths.join('\n'),
+    { implicitDescendants: false }
+  )
   const paths = await globber.glob()
 
   console.log('[post.js:42] DEBUGGING STRING ==> 2')

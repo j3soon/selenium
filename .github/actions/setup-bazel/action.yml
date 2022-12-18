@@ -9,16 +9,16 @@ inputs:
     description: Extra contents to write to user .bazelrc
     required: false
     default: ""
-  google-credentials:
-    description: Google Cloud account key for remote cache
-    required: false
-    default: ""
   cache-version:
     description: Version of all caches
     required: false
     default: 1
   external-cache:
     description: Cache external repositories configuration
+    required: false
+    default: ""
+  google-credentials:
+    description: Google Cloud account key for remote cache
     required: false
     default: ""
   repository-cache:
