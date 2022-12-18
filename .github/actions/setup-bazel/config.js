@@ -9,6 +9,7 @@ const externalCacheConfig = yaml.parse(core.getInput('external-cache'))
 const homeDir = os.homedir()
 const platform = os.platform()
 
+const bazelExternal = core.toPosixPath(`${bazelOutputBase}/external`)
 const bazelRepository = core.toPosixPath(`${homeDir}/.cache/bazel-repo`)
 let bazelOutputBase = `${homeDir}/.bazel`
 let userCacheDir = `${homeDir}/.cache`
@@ -42,7 +43,14 @@ if (googleCredentials.length > 0 && !googleCredentialsSaved) {
 const externalCache = {}
 if (externalCacheConfig) {
   for (const name in externalCacheConfig) {
-    externalCache[name] = Array(externalCacheConfig[name]).flat()
+    externalCache[name] = {
+      files: Array(externalCacheConfig[name]).flat(),
+      name: name.replace('*', ''),
+      paths: [
+        `${bazelExternal}/@${name}.marker`,
+        `${bazelExternal}/${name}`
+      ]
+    }
   }
 }
 
@@ -50,12 +58,13 @@ module.exports = {
   baseCacheKey: `setup-bazel-${cacheVersion}-${os.platform()}`,
   bazeliskCache: {
     files: ['.bazelversion'],
+    name: 'bazelisk',
     paths: [core.toPosixPath(`${userCacheDir}/bazelisk`)]
   },
   bazelrc,
   externalCache,
   paths: {
-    bazelExternal: core.toPosixPath(`${bazelOutputBase}/external`),
+    bazelExternal,
     bazelOutputBase: core.toPosixPath(bazelOutputBase),
     bazelrc: core.toPosixPath(`${homeDir}/.bazelrc`)
   },
@@ -66,6 +75,7 @@ module.exports = {
       'WORKSPACE.bazel',
       'WORKSPACE'
     ],
+    name: 'repository',
     paths: [bazelRepository]
   },
   platform

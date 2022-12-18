@@ -16,43 +16,37 @@ async function saveCaches () {
   await saveRepositoryCache()
 
   for (const name in config.externalCache) {
-    await saveExternalCache(name)
+    await saveExternalCache(name, config.externalCache[name])
   }
 }
 
 async function saveBazeliskCache () {
   await saveCache(
-    [config.paths.bazelisk],
+    config.bazeliskCache.paths,
     core.getState('bazelisk-cache-key')
   )
 }
 
 async function saveRepositoryCache () {
   await saveCache(
-    [config.paths.bazelRepository],
+    config.repositoryCache.paths,
     core.getState('repository-cache-key')
   )
 }
 
-async function saveExternalCache (name) {
-  const globber = await glob.create([
-    `${config.paths.bazelExternal}/@${name}.marker`,
-    `${config.paths.bazelExternal}/${name}`
-  ].join('\n'), { implicitDescendants: false })
+async function saveExternalCache (cacheConfig) {
+  const globber = await glob.create(cacheConfig.paths.join('\n'), { implicitDescendants: false })
   const paths = await globber.glob()
 
   console.log('[post.js:42] DEBUGGING STRING ==> 2')
-  console.log([
-    `${config.paths.bazelExternal}/@${name}.marker`,
-    `${config.paths.bazelExternal}/${name}`
-  ].join('\n'))
+  console.log(cacheConfig.paths.join('\n'))
   console.log('[post.js:48] DEBUGGING STRING ==> 0')
   console.log(paths)
   console.log('[post.js:50] DEBUGGING STRING ==> 3')
 
   await saveCache(
     paths,
-    core.getState(`external-${name.replace('*', '')}-cache-key`)
+    core.getState(`external-${cacheConfig.name}-cache-key`)
   )
 }
 

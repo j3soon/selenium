@@ -28,7 +28,7 @@ async function setupBazel () {
   }
 
   for (const name in config.externalCache) {
-    await restoreExternalCache(name, config.externalCache[name])
+    await restoreExternalCache(config.externalCache[name])
   }
 }
 
@@ -57,7 +57,7 @@ async function restoreBazeliskCache () {
   const hash = await glob.hashFiles(config.bazeliskCache.files.join('\n'))
   const key = `${config.baseCacheKey}-bazelisk-${hash}`
 
-  await restoreCache('bazelisk', paths, key)
+  await restoreCache(config.bazeliskCache.name, paths, key)
 }
 
 async function restoreRepositoryCache () {
@@ -69,13 +69,13 @@ async function restoreRepositoryCache () {
   await restoreCache('repository', paths, key, restoreKeys)
 }
 
-async function restoreExternalCache (name, files) {
-  const paths = [config.paths.bazelExternal]
-  const hash = await glob.hashFiles(files.join('\n'))
-  const key = `${config.baseCacheKey}-external-${name.replace('*', '')}-${hash}`
-  const restoreKeys = [`${config.baseCacheKey}-external-${name.replace('*', '')}-`]
+async function restoreExternalCache (cacheConfig) {
+  const paths = [`${config.paths.bazelExternal}/${cacheConfig.name}`]
+  const hash = await glob.hashFiles(cacheConfig.files.join('\n'))
+  const key = `${config.baseCacheKey}-external-${cacheConfig.name}-${hash}`
+  const restoreKeys = [`${config.baseCacheKey}-external-${cacheConfig.name}-`]
 
-  await restoreCache(`external-${name.replace('*', '')}`, paths, key, restoreKeys)
+  await restoreCache(`external-${cacheConfig.name}`, paths, key, restoreKeys)
 }
 
 async function restoreCache (name, paths, key, restoreKeys = []) {
@@ -91,7 +91,7 @@ async function restoreCache (name, paths, key, restoreKeys = []) {
     console.log(`Failed to restore ${name} cache`)
   }
 
-  core.saveState(`${name.replace('*', '')}-cache-key`, key)
+  core.saveState(`${name}-cache-key`, key)
 }
 
 run()
