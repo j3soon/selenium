@@ -20,15 +20,15 @@ async function setupBazel () {
   await setupBazelrc()
 
   if (core.getBooleanInput('bazelisk-cache')) {
-    await setupBazeliskCache()
+    await restoreBazeliskCache()
   }
 
   if (core.getBooleanInput('repository-cache')) {
-    await setupRepositoryCache()
+    await restoreRepositoryCache()
   }
 
   for (const name in config.externalCache) {
-    await setupExternalCache(name, config.externalCache[name])
+    await restoreExternalCache(name, config.externalCache[name])
   }
 }
 
@@ -52,35 +52,30 @@ async function setupBazelrc () {
   }
 }
 
-async function setupBazeliskCache () {
-  const paths = [config.paths.bazelisk]
-  const hash = await glob.hashFiles('.bazelversion')
+async function restoreBazeliskCache () {
+  const paths = config.bazeliskCache.paths
+  const hash = await glob.hashFiles(config.bazeliskCache.files.join('\n'))
   const key = `${config.baseCacheKey}-bazelisk-${hash}`
 
   await restoreCache('bazelisk', paths, key)
 }
 
-async function setupRepositoryCache () {
-  const paths = [config.paths.bazelRepository]
-  const hash = await glob.hashFiles([
-    '**/BUILD.bazel',
-    '**/BUILD',
-    'WORKSPACE.bazel',
-    'WORKSPACE'
-  ].join('\n'))
+async function restoreRepositoryCache () {
+  const paths = config.repositoryCache.paths
+  const hash = await glob.hashFiles(config.repositoryCache.files.join('\n'))
   const key = `${config.baseCacheKey}-repository-${hash}`
   const restoreKeys = [`${config.baseCacheKey}-repository-`]
 
   await restoreCache('repository', paths, key, restoreKeys)
 }
 
-async function setupExternalCache (name, files) {
+async function restoreExternalCache (name, files) {
   const paths = [config.paths.bazelExternal]
   const hash = await glob.hashFiles(files.join('\n'))
-  const key = `${config.baseCacheKey}-external-${name}-${hash}`
-  const restoreKeys = [`${config.baseCacheKey}-external-${name}-`]
+  const key = `${config.baseCacheKey}-external-${name.replace('*', '')}-${hash}`
+  const restoreKeys = [`${config.baseCacheKey}-external-${name.replace('*', '')}-`]
 
-  await restoreCache(`external-${name}`, paths, key, restoreKeys)
+  await restoreCache(`external-${name.replace('*', '')}`, paths, key, restoreKeys)
 }
 
 async function restoreCache (name, paths, key, restoreKeys = []) {
@@ -96,7 +91,7 @@ async function restoreCache (name, paths, key, restoreKeys = []) {
     console.log(`Failed to restore ${name} cache`)
   }
 
-  core.saveState(`${name}-cache-key`, key)
+  core.saveState(`${name.replace('*', '')}-cache-key`, key)
 }
 
 run()

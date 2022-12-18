@@ -52,7 +52,7 @@ async function saveExternalCache (name) {
 
   await saveCache(
     paths,
-    core.getState(`external-${name}-cache-key`)
+    core.getState(`external-${name.replace('*', '')}-cache-key`)
   )
 }
 
