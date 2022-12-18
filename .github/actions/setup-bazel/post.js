@@ -38,7 +38,7 @@ async function saveExternalCache (name) {
   const globber = await glob.create([
     `${config.paths.bazelExternal}/@${name}.marker`,
     `${config.paths.bazelExternal}/${name}`
-  ].join('\n'))
+  ].join('\n'), { implicitDescendants: false })
 
   console.log('[post.js:42] DEBUGGING STRING ==> 2')
   console.log([
@@ -49,10 +49,10 @@ async function saveExternalCache (name) {
   console.log(await globber.glob())
   console.log('[post.js:50] DEBUGGING STRING ==> 3')
 
-  // await saveCache(
-  //   await globber.glob(),
-  //   core.getState(`external-${name}-cache-key`)
-  // )
+  await saveCache(
+    await globber.glob(),
+    core.getState(`external-${name}-cache-key`)
+  )
 }
 
 async function saveCache (paths, key) {
