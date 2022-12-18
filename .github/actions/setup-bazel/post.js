@@ -40,10 +40,19 @@ async function saveExternalCache (name) {
     `${config.paths.bazelExternal}/${name}`
   ].join('\n'))
 
-  await saveCache(
-    await globber.glob(),
-    core.getState(`external-${name}-cache-key`)
-  )
+  console.log('[post.js:42] DEBUGGING STRING ==> 2')
+  console.log([
+    `${config.paths.bazelExternal}/@${name}.marker`,
+    `${config.paths.bazelExternal}/${name}`
+  ].join('\n'))
+  console.log('[post.js:48] DEBUGGING STRING ==> 0')
+  console.log(await globber.glob())
+  console.log('[post.js:50] DEBUGGING STRING ==> 3')
+
+  // await saveCache(
+  //   await globber.glob(),
+  //   core.getState(`external-${name}-cache-key`)
+  // )
 }
 
 async function saveCache (paths, key) {
