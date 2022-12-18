@@ -65,7 +65,7 @@ jobs:
           bazelisk-cache: true
           bazelrc: |
             build --remote_cache=https://storage.googleapis.com/seleniumhq-bazel-remote-cache
-            build --remote_upload_local_results=${{ github.ref == 'refs/heads/setup-bazel' }}
+            build --remote_upload_local_results=${{ github.ref == 'refs/heads/trunk' }}
           external-cache: |
             crates: rust/Cargo.Bazel.lock
             go_sdk: WORKSPACE
@@ -96,7 +96,7 @@ jobs:
       - name: Set resolution
         if: matrix.os == 'windows-latest'
         run: Set-DisplayResolution -Width 1920 -Height 1080 -Force
-      - uses: mxschmitt/action-tmate@v3
+      # - uses: mxschmitt/action-tmate@v3
       - name: Run Chrome tests
         run: bazel test --cache_test_results=no --test_output=all //rb:${{ matrix.target }}
         env:
