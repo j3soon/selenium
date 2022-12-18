@@ -9,7 +9,6 @@ const externalCacheConfig = yaml.parse(core.getInput('external-cache'))
 const homeDir = os.homedir()
 const platform = os.platform()
 
-const bazelExternal = core.toPosixPath(`${bazelOutputBase}/external`)
 const bazelRepository = core.toPosixPath(`${homeDir}/.cache/bazel-repo`)
 let bazelOutputBase = `${homeDir}/.bazel`
 let userCacheDir = `${homeDir}/.cache`
@@ -40,6 +39,7 @@ if (googleCredentials.length > 0 && !googleCredentialsSaved) {
   core.saveState('google-credentials-path', googleCredentialsPath)
 }
 
+const bazelExternal = core.toPosixPath(`${bazelOutputBase}/external`)
 const externalCache = {}
 if (externalCacheConfig) {
   for (const name in externalCacheConfig) {
