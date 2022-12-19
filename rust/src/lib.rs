@@ -23,6 +23,7 @@ use crate::iexplorer::IExplorerManager;
 use std::fs;
 
 use crate::config::{str_to_os, ManagerConfig};
+use reqwest::Client;
 use std::collections::HashMap;
 use std::error::Error;
 use std::path::PathBuf;
@@ -63,6 +64,8 @@ pub trait SeleniumManager {
 
     fn get_browser_name(&self) -> &str;
 
+    fn get_http_client(&self) -> &Client;
+
     fn get_browser_path_map(&self) -> HashMap<BrowserPath, &str>;
 
     fn discover_browser_version(&self) -> Option<String>;
@@ -85,7 +88,9 @@ pub trait SeleniumManager {
 
     fn download_driver(&self) -> Result<(), Box<dyn Error>> {
         let driver_url = Self::get_driver_url(self)?;
-        let (_tmp_folder, driver_zip_file) = download_driver_to_tmp_folder(driver_url)?;
+        log::debug!("Driver URL: {}", driver_url);
+        let (_tmp_folder, driver_zip_file) =
+            download_driver_to_tmp_folder(self.get_http_client(), driver_url)?;
         let driver_path_in_cache = Self::get_driver_path_in_cache(self);
         uncompress(&driver_zip_file, driver_path_in_cache)
     }
@@ -336,6 +341,14 @@ pub fn clear_cache() {
             )
         });
     }
+}
+
+pub fn create_default_http_client() -> Client {
+    Client::builder()
+        .danger_accept_invalid_certs(true)
+        .use_rustls_tls()
+        .build()
+        .unwrap_or_default()
 }
 
 // ----------------------------------------------------------
