@@ -5,11 +5,11 @@ const io = require('@actions/io')
 const config = require('./config')
 
 async function run () {
-  try {
-    await saveCaches()
-  } catch (error) {
-    core.warning(error.stack)
-  }
+  // try {
+  await saveCaches()
+  // } catch (error) {
+  //   core.warning(error.stack)
+  // }
 }
 
 async function saveCaches () {

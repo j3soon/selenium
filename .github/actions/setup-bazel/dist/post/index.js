@@ -69922,11 +69922,11 @@ const io = __nccwpck_require__(7436)
 const config = __nccwpck_require__(5532)
 
 async function run () {
-  try {
-    await saveCaches()
-  } catch (error) {
-    core.warning(error.stack)
-  }
+  // try {
+  await saveCaches()
+  // } catch (error) {
+  //   core.warning(error.stack)
+  // }
 }
 
 async function saveCaches () {
