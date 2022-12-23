@@ -69987,7 +69987,7 @@ async function restoreCache (cacheConfig, extract = false) {
   const key = `${restoreKey}${hash}`
   let paths = []
   if (extract) {
-    paths = [`${config.paths.bazelExternal}/${cacheConfig.name}`]
+    paths = [`${config.paths.externalTmp}/${cacheConfig.name}`]
   } else {
     paths = cacheConfig.paths
   }
