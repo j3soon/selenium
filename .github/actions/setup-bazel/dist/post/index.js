@@ -18,6 +18,7 @@ const platform = os.platform()
 const bazelDisk = core.toPosixPath(`${homeDir}/.cache/bazel-disk`)
 const bazelRepository = core.toPosixPath(`${homeDir}/.cache/bazel-repo`)
 let bazelOutputBase = `${homeDir}/.bazel`
+let externalTmp = `${homeDir}/externalTmp`
 let userCacheDir = `${homeDir}/.cache`
 
 switch (platform) {
@@ -26,6 +27,7 @@ switch (platform) {
     break
   case 'win32':
     bazelOutputBase = 'D:/_bazel'
+    externalTmp = 'D:/_externalTmp'
     userCacheDir = `${homeDir}/AppData/Local`
     break
 }
@@ -57,7 +59,7 @@ if (externalCacheConfig) {
     externalCache[name] = {
       files: Array(externalCacheConfig[name]).flat(),
       name: `external-${name.replace('*', '')}`,
-      packageTo: core.toPosixPath(`${homeDir}/externalTmp/${name.replace('*', '')}`),
+      packageTo: core.toPosixPath(`${externalTmp}/${name.replace('*', '')}`),
       paths: [
         `${bazelExternal}/@${name}.marker`,
         `${bazelExternal}/${name}`
