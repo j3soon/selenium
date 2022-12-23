@@ -69983,7 +69983,7 @@ async function restoreCache (cacheConfig) {
   const name = cacheConfig.name
   const paths = cacheConfig.paths
   const restoreKey = `${config.baseCacheKey}-${name}-`
-  const key = `${restoreKey}-${hash}`
+  const key = `${restoreKey}${hash}`
 
   console.log(`Attempting to restore ${name} cache from ${key}`)
 
