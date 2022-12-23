@@ -14,16 +14,22 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
+package org.openqa.selenium.bidi.log;
 
-package org.openqa.selenium.devtools.v105;
+public class FilterBy {
 
-import com.google.auto.service.AutoService;
-import org.openqa.selenium.devtools.CdpInfo;
-
-@AutoService(CdpInfo.class)
-public class V105CdpInfo extends CdpInfo {
-
-  public V105CdpInfo() {
-    super(105, V105Domains::new);
+  private final LogLevel level;
+  
+  private FilterBy(LogLevel logLevel) {
+    this.level = logLevel;
   }
+
+  public static FilterBy logLevel(LogLevel logLevel) {
+    return new FilterBy(logLevel);
+  }
+
+  public LogLevel getLevel() {
+    return level;
+  }
+
 }

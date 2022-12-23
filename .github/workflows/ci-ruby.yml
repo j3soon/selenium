@@ -20,33 +20,6 @@ jobs:
   #   with:
   #     bazel-target-prefix: '//rb'
 
-  # build:
-  #   if: ${{ needs.check_workflow.outputs.result == 'true' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || contains(toJson(github.event.commits), '[rb]') == true }}
-  #   needs: check_workflow
-  #   runs-on: ubuntu-latest
-  #   strategy:
-  #     fail-fast: false
-  #     matrix:
-  #       target: [ 'selenium-devtools', 'selenium-webdriver' ]
-  #   steps:
-  #     - name: Checkout source tree
-  #       uses: actions/checkout@v3
-  #     - name: Setup Java
-  #       uses: actions/setup-java@v3
-  #       with:
-  #         java-version: 11
-  #         distribution: 'adopt'
-  #     - name: Cache Bazel artifacts
-  #       uses: ./.github/actions/cache-bazel
-  #       with:
-  #         workflow: ruby
-  #         key: gem-${{ matrix.target }}
-  #         gcs-key: ${{ secrets.GOOGLE_CLOUD_STORAGE_KEY }}
-  #     - name: Build Gems
-  #       uses: ./.github/actions/bazel
-  #       with:
-  #         command: build //rb:${{ matrix.target }}
-
   chrome-test:
     # if: ${{ needs.check_workflow.outputs.result == 'true' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || contains(toJson(github.event.commits), '[run ruby]') == true }}
     # needs: check_workflow
@@ -65,7 +38,6 @@ jobs:
           bazelisk-cache: true
           bazelrc: |
             build --remote_cache=https://storage.googleapis.com/seleniumhq-bazel-remote-cache
-            build --remote_upload_local_results=${{ github.ref == 'refs/heads/trunk' }}
           external-cache: |
             crates: rust/Cargo.Bazel.lock
             go_sdk: WORKSPACE
@@ -73,29 +45,28 @@ jobs:
             python_3_*: WORKSPACE
             rules_ruby_dist: rb/ruby_version.bzl
             rust_*_tools: WORKSPACE
-          # google-credentials: ${{ secrets.GOOGLE_CLOUD_STORAGE_KEY }}
           repository-cache: true
       - name: Setup Java
         uses: actions/setup-java@v3
         with:
           java-version: 11
-          distribution: 'adopt'
-      - name: Setup Fluxbox
-        if: matrix.os == 'ubuntu-latest'
-        run: sudo apt-get -y install fluxbox
-      - name: Setup Chrome
-        uses: browser-actions/setup-chrome@latest
-        with:
-          chrome-version: stable
-      - name: Start XVFB
-        if: matrix.os == 'ubuntu-latest'
-        run: Xvfb :99 &
-      - name: Start Fluxbox
-        if: matrix.os == 'ubuntu-latest'
-        run: fluxbox -display :99 &
-      - name: Set resolution
-        if: matrix.os == 'windows-latest'
-        run: Set-DisplayResolution -Width 1920 -Height 1080 -Force
+          distribution: 'temurin'
+      # - name: Setup Fluxbox
+      #   if: matrix.os == 'ubuntu-latest'
+      #   run: sudo apt-get -y install fluxbox
+      # - name: Setup Chrome
+      #   uses: browser-actions/setup-chrome@latest
+      #   with:
+      #     chrome-version: stable
+      # - name: Start XVFB
+      #   if: matrix.os == 'ubuntu-latest'
+      #   run: Xvfb :99 &
+      # - name: Start Fluxbox
+      #   if: matrix.os == 'ubuntu-latest'
+      #   run: fluxbox -display :99 &
+      # - name: Set resolution
+      #   if: matrix.os == 'windows-latest'
+      #   run: Set-DisplayResolution -Width 1920 -Height 1080 -Force
       # - uses: mxschmitt/action-tmate@v3
       - name: Run Chrome tests
         run: bazel test --cache_test_results=no --test_output=all //rb:${{ matrix.target }}
@@ -118,13 +89,12 @@ jobs:
   #       uses: actions/setup-java@v3
   #       with:
   #         java-version: 11
-  #         distribution: 'adopt'
+  #         distribution: 'temurin'
   #     - name: Cache Bazel artifacts
   #       uses: ./.github/actions/cache-bazel
   #       with:
   #         workflow: ruby
   #         key: ${{ matrix.target }}
-  #         gcs-key: ${{ secrets.GOOGLE_CLOUD_STORAGE_KEY }}
   #     - name: Setup Edge
   #       uses: browser-actions/setup-edge@latest
   #       with:
@@ -151,13 +121,12 @@ jobs:
   #       uses: actions/setup-java@v3
   #       with:
   #         java-version: 11
-  #         distribution: 'adopt'
+  #         distribution: 'temurin'
   #     - name: Cache Bazel artifacts
   #       uses: ./.github/actions/cache-bazel
   #       with:
   #         workflow: ruby
   #         key: ${{ matrix.target }}
-  #         gcs-key: ${{ secrets.GOOGLE_CLOUD_STORAGE_KEY }}
   #     - name: Setup Fluxbox
   #       if: matrix.os == 'ubuntu-latest'
   #       run: sudo apt-get -y install fluxbox
@@ -195,7 +164,6 @@ jobs:
   #       with:
   #         workflow: ruby
   #         key: docs
-  #         gcs-key: ${{ secrets.GOOGLE_CLOUD_STORAGE_KEY }}
   #     - name: Run docs tests
   #       uses: ./.github/actions/bazel
   #       with:
@@ -213,7 +181,6 @@ jobs:
   #       with:
   #         workflow: ruby
   #         key: lint
-  #         gcs-key: ${{ secrets.GOOGLE_CLOUD_STORAGE_KEY }}
   #     - name: Run lint tests
   #       uses: ./.github/actions/bazel
   #       with:
@@ -239,7 +206,6 @@ jobs:
   #       with:
   #         workflow: ruby
   #         key: unit-test-${{ matrix.ruby }}
-  #         gcs-key: ${{ secrets.GOOGLE_CLOUD_STORAGE_KEY }}
   #     - name: Set Ruby version to ${{ matrix.ruby }}
   #       run: echo 'RUBY_VERSION = "${{ matrix.ruby }}"' > rb/ruby_version.bzl
   #     - name: Run unit tests
