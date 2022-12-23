@@ -25,6 +25,10 @@ async function setupBazel () {
     await restoreCache(config.bazeliskCache)
   }
 
+  if (core.getBooleanInput('disk-cache')) {
+    await restoreCache(config.diskCache)
+  }
+
   if (core.getBooleanInput('repository-cache')) {
     await restoreCache(config.repositoryCache)
   }

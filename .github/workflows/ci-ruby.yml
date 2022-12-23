@@ -36,15 +36,14 @@ jobs:
         uses: ./.github/actions/setup-bazel
         with:
           bazelisk-cache: true
-          bazelrc: |
-            build --remote_cache=https://storage.googleapis.com/seleniumhq-bazel-remote-cache
+          disk-cache: true
           external-cache: |
             crates: rust/Cargo.Bazel.lock
             go_sdk: WORKSPACE
             npm: package-lock.json
-            python_3_*: WORKSPACE
+            # python_3_*: WORKSPACE
             rules_ruby_dist: rb/ruby_version.bzl
-            rust_*_tools: WORKSPACE
+            # rust_*_tools: WORKSPACE
           repository-cache: true
       - name: Setup Java
         uses: actions/setup-java@v3

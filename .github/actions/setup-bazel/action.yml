@@ -13,6 +13,10 @@ inputs:
     description: Version of all caches
     required: false
     default: 1
+  disk-cache:
+    description: Cache actions based on Bazel files
+    required: false
+    default: false
   external-cache:
     description: Cache external repositories configuration
     required: false
@@ -22,7 +26,7 @@ inputs:
     required: false
     default: ""
   repository-cache:
-    description: Cache repositories based on WORKSPACE
+    description: Cache repositories based on Bazel files
     required: false
     default: false
 

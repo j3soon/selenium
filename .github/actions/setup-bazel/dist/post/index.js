@@ -15,6 +15,7 @@ const externalCacheConfig = yaml.parse(core.getInput('external-cache'))
 const homeDir = os.homedir()
 const platform = os.platform()
 
+const bazelDisk = core.toPosixPath(`${homeDir}/.cache/bazel-disk`)
 const bazelRepository = core.toPosixPath(`${homeDir}/.cache/bazel-repo`)
 let bazelOutputBase = `${homeDir}/.bazel`
 let userCacheDir = `${homeDir}/.cache`
@@ -30,6 +31,10 @@ switch (platform) {
 }
 
 const bazelrc = core.getMultilineInput('bazelrc')
+
+if (core.getBooleanInput('disk-cache')) {
+  bazelrc.push(`build --disk_cache=${bazelDisk}`)
+}
 
 if (core.getBooleanInput('repository-cache')) {
   bazelrc.push(`build --repository_cache=${bazelRepository}`)
@@ -68,6 +73,16 @@ module.exports = {
     paths: [core.toPosixPath(`${userCacheDir}/bazelisk`)]
   },
   bazelrc,
+  diskCache: {
+    files: [
+      '**/BUILD.bazel',
+      '**/BUILD',
+      'WORKSPACE.bazel',
+      'WORKSPACE'
+    ],
+    name: 'disk',
+    paths: [bazelDisk]
+  },
   externalCache,
   paths: {
     bazelExternal,
@@ -69915,6 +69930,7 @@ async function run () {
 
 async function saveCaches () {
   await saveCache(config.bazeliskCache.paths, core.getState('bazelisk-cache-key'))
+  await saveCache(config.diskCache.paths, core.getState('disk-cache-key'))
   await saveCache(config.repositoryCache.paths, core.getState('repository-cache-key'))
 
   for (const name in config.externalCache) {

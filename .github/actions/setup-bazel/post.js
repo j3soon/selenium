@@ -13,6 +13,7 @@ async function run () {
 
 async function saveCaches () {
   await saveCache(config.bazeliskCache.paths, core.getState('bazelisk-cache-key'))
+  await saveCache(config.diskCache.paths, core.getState('disk-cache-key'))
   await saveCache(config.repositoryCache.paths, core.getState('repository-cache-key'))
 
   for (const name in config.externalCache) {
