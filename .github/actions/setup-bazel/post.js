@@ -13,56 +13,44 @@ async function run () {
 }
 
 async function saveCaches () {
-  await saveCache(config.bazeliskCache.paths, core.getState('bazelisk-cache-key'))
-  await saveCache(config.diskCache.paths, core.getState('disk-cache-key'))
-  await saveCache(config.repositoryCache.paths, core.getState('repository-cache-key'))
+  await saveCache(config.bazeliskCache)
+  await saveCache(config.diskCache)
+  await saveCache(config.repositoryCache)
 
   for (const name in config.externalCache) {
-    await saveExternalCache(config.externalCache[name])
+    await saveCache(config.externalCache[name])
   }
 }
 
-async function saveExternalCache (cacheConfig) {
-  console.log('[post.js:26] DEBUGGING STRING ==> 2')
-  console.log(cacheConfig.paths.join('\n'))
-  const globber = await glob.create(
-    cacheConfig.paths.join('\n'),
-    { implicitDescendants: false }
-  )
-  console.log('[post.js:31] DEBUGGING STRING ==> 3')
-  const paths = await globber.glob()
-  console.log('[post.js:33] DEBUGGING STRING ==> 4')
-
-  if (paths.length === 0) {
-    return
-  }
-
-  console.log('[post.js:42] DEBUGGING STRING ==> 2')
-  console.log('[post.js:48] DEBUGGING STRING ==> 0')
-  console.log(paths)
-  console.log('[post.js:50] DEBUGGING STRING ==> 3')
-
-  const knownPath = `${config.paths.externalTmp}/${cacheConfig.name}`
-  console.log(`Known path is ${knownPath}`)
-  await io.mkdirP(knownPath)
-  for (const path of paths) {
-    console.log(`Copying ${path} to ${knownPath}`)
-    await io.cp(path, knownPath, { recursive: true })
-  }
-
-  await saveCache(
-    [knownPath],
-    core.getState(`${cacheConfig.name}-cache-key`)
-  )
-}
-
-async function saveCache (paths, key) {
+async function saveCache (cacheConfig) {
+  const key = core.getState(`${cacheConfig.name}-cache-key`)
   if (key.length === 0) {
     return
+  }
+
+  let paths = cacheConfig.paths
+  if (cacheConfig.packageTo) {
+    const globber = await glob.create(
+      paths.join('\n'),
+      { implicitDescendants: false }
+    )
+    paths = await globber.glob()
+
+    if (paths.length === 0) {
+      return
+    }
+
+    console.log(`Packaging ${cacheConfig.name}`)
+    await io.mkdirP(cacheConfig.packageTo)
+
+    for (const path of paths) {
+      console.log(`Copying ${path} to ${cacheConfig.packageTo}`)
+      await io.cp(path, cacheConfig.packageTo, { recursive: true })
+    }
+
+    paths = [cacheConfig.packageTo]
   }
 
   console.log(`Saving cache ${key}`)
   await cache.saveCache(paths, key)
 }
-
-run()

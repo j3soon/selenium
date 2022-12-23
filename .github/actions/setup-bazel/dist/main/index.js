@@ -57,6 +57,7 @@ if (externalCacheConfig) {
     externalCache[name] = {
       files: Array(externalCacheConfig[name]).flat(),
       name: `external-${name.replace('*', '')}`,
+      packageTo: core.toPosixPath(`${homeDir}/externalTmp/${name.replace('*', '')}`),
       paths: [
         `${bazelExternal}/@${name}.marker`,
         `${bazelExternal}/${name}`
@@ -87,8 +88,7 @@ module.exports = {
   paths: {
     bazelExternal,
     bazelOutputBase: core.toPosixPath(bazelOutputBase),
-    bazelrc: core.toPosixPath(`${homeDir}/.bazelrc`),
-    externalTmp: core.toPosixPath(`${homeDir}/externalTmp`)
+    bazelrc: core.toPosixPath(`${homeDir}/.bazelrc`)
   },
   repositoryCache: {
     files: [
@@ -69953,7 +69953,7 @@ async function setupBazel () {
   }
 
   for (const name in config.externalCache) {
-    await restoreCache(config.externalCache[name], true)
+    await restoreCache(config.externalCache[name])
   }
 }
 
@@ -69978,43 +69978,38 @@ async function setupBazelrc () {
   }
 }
 
-async function restoreCache (cacheConfig, extract = false) {
+async function restoreCache (cacheConfig) {
   core.startGroup(`Restore cache for ${cacheConfig.name}`)
 
   const hash = await glob.hashFiles(cacheConfig.files.join('\n'))
   const name = cacheConfig.name
   const restoreKey = `${config.baseCacheKey}-${name}-`
   const key = `${restoreKey}${hash}`
-  let paths = []
-  if (extract) {
-    paths = [`${config.paths.externalTmp}/${cacheConfig.name}`]
-  } else {
-    paths = cacheConfig.paths
-  }
+  const paths = cacheConfig.packageTo ? [cacheConfig.packageTo] : cacheConfig.paths
 
   console.log(`Attempting to restore ${name} cache from ${key}`)
 
   const restoredKey = await cache.restoreCache(paths, key, [restoreKey])
   if (restoredKey) {
     console.log(`Successfully restored cache from ${restoredKey}`)
+
     if (restoredKey !== key) {
       core.saveState(`${name}-cache-key`, key)
     }
 
-    if (extract) {
-      console.log('Extracting...')
+    if (cacheConfig.packageTo) {
+      console.log(`Extracting cache contents from ${cacheConfig.packageTo}`)
       const globber = await glob.create(
-        `${config.paths.externalTmp}/${cacheConfig.name}/*`,
+        `${cacheConfig.packageTo}/*`,
         { implicitDescendants: false }
       )
       const globbedPaths = await globber.glob()
-      console.log(globbedPaths)
 
       for (const path of globbedPaths) {
-        console.log(`Moving ${path} up`)
+        console.log(`Moving ${path} to ${config.paths.bazelExternal}`)
         await io.mv(path, config.paths.bazelExternal, { recursive: true })
       }
-      await io.rmRF(`${config.paths.externalTmp}/${cacheConfig.name}`)
+      await io.rmRF(cacheConfig.packageTo)
     }
   } else {
     console.log(`Failed to restore ${name} cache`)

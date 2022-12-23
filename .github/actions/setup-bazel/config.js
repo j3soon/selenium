@@ -51,6 +51,7 @@ if (externalCacheConfig) {
     externalCache[name] = {
       files: Array(externalCacheConfig[name]).flat(),
       name: `external-${name.replace('*', '')}`,
+      packageTo: core.toPosixPath(`${homeDir}/externalTmp/${name.replace('*', '')}`),
       paths: [
         `${bazelExternal}/@${name}.marker`,
         `${bazelExternal}/${name}`
@@ -81,8 +82,7 @@ module.exports = {
   paths: {
     bazelExternal,
     bazelOutputBase: core.toPosixPath(bazelOutputBase),
-    bazelrc: core.toPosixPath(`${homeDir}/.bazelrc`),
-    externalTmp: core.toPosixPath(`${homeDir}/externalTmp`)
+    bazelrc: core.toPosixPath(`${homeDir}/.bazelrc`)
   },
   repositoryCache: {
     files: [
