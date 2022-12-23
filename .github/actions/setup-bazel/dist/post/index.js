@@ -87,7 +87,8 @@ module.exports = {
   paths: {
     bazelExternal,
     bazelOutputBase: core.toPosixPath(bazelOutputBase),
-    bazelrc: core.toPosixPath(`${homeDir}/.bazelrc`)
+    bazelrc: core.toPosixPath(`${homeDir}/.bazelrc`),
+    externalTmp: core.toPosixPath(`${homeDir}/externalTmp`)
   },
   repositoryCache: {
     files: [
@@ -69959,7 +69960,7 @@ async function saveExternalCache (cacheConfig) {
   console.log(paths)
   console.log('[post.js:50] DEBUGGING STRING ==> 3')
 
-  const knownPath = `${config.paths.bazelExternal}/${cacheConfig.name}`
+  const knownPath = `${config.paths.externalTmp}/${cacheConfig.name}`
   console.log(`Known path is ${knownPath}`)
   await io.mkdirP(knownPath)
   for (const path of paths) {
@@ -69971,7 +69972,6 @@ async function saveExternalCache (cacheConfig) {
     [knownPath],
     core.getState(`${cacheConfig.name}-cache-key`)
   )
-  await io.rmRF(knownPath)
 }
 
 async function saveCache (paths, key) {

@@ -81,7 +81,8 @@ module.exports = {
   paths: {
     bazelExternal,
     bazelOutputBase: core.toPosixPath(bazelOutputBase),
-    bazelrc: core.toPosixPath(`${homeDir}/.bazelrc`)
+    bazelrc: core.toPosixPath(`${homeDir}/.bazelrc`),
+    externalTmp: core.toPosixPath(`${homeDir}/externalTmp`)
   },
   repositoryCache: {
     files: [

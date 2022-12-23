@@ -86,7 +86,7 @@ async function restoreCache (cacheConfig, extract = false) {
     if (extract) {
       console.log('Extracting...')
       const globber = await glob.create(
-        `${config.paths.bazelExternal}/${cacheConfig.name}/*`,
+        `${config.paths.externalTmp}/${cacheConfig.name}/*`,
         { implicitDescendants: false }
       )
       const globbedPaths = await globber.glob()
@@ -96,7 +96,7 @@ async function restoreCache (cacheConfig, extract = false) {
         console.log(`Moving ${path} up`)
         await io.mv(path, config.paths.bazelExternal, { recursive: true })
       }
-      await io.rmRF(`${config.paths.bazelExternal}/${cacheConfig.name}`)
+      await io.rmRF(`${config.paths.externalTmp}/${cacheConfig.name}`)
     }
   } else {
     console.log(`Failed to restore ${name} cache`)
