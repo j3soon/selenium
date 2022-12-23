@@ -69942,7 +69942,6 @@ async function saveCaches () {
 
 async function saveCache (cacheConfig) {
   const key = core.getState(`${cacheConfig.name}-cache-key`)
-  console.log(key)
   if (key.length === 0) {
     return
   }
@@ -69973,6 +69972,8 @@ async function saveCache (cacheConfig) {
   console.log(`Saving cache ${key}`)
   await cache.saveCache(paths, key)
 }
+
+run()
 
 })();
 
