@@ -69932,7 +69932,7 @@ async function run () {
 async function setupBazel () {
   core.startGroup('Configure Bazel')
   console.log('Configuration:')
-  console.log(config)
+  console.log(JSON.stringify(config, null, 2))
 
   await optimizeCacheOnWindows()
   await setupBazelrc()
