@@ -23,13 +23,13 @@ async function saveCaches () {
 }
 
 async function saveCache (cacheConfig) {
-  core.startGroup(`Save cache for ${cacheConfig.name}`)
   let paths = cacheConfig.paths
   const key = core.getState(`${cacheConfig.name}-cache-key`)
   if (key.length === 0) {
     return
   }
 
+  core.startGroup(`Save cache for ${cacheConfig.name}`)
   if (cacheConfig.packageTo) {
     const globber = await glob.create(
       paths.join('\n'),
