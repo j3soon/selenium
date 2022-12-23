@@ -24,6 +24,7 @@ async function saveCaches () {
 
 async function saveCache (cacheConfig) {
   const key = core.getState(`${cacheConfig.name}-cache-key`)
+  console.log(key)
   if (key.length === 0) {
     return
   }
