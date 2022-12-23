@@ -2,6 +2,7 @@ const fs = require('fs')
 const core = require('@actions/core')
 const cache = require('@actions/cache')
 const glob = require('@actions/glob')
+const io = require('@actions/io')
 const config = require('./config')
 
 async function run () {
@@ -34,7 +35,7 @@ async function setupBazel () {
   }
 
   for (const name in config.externalCache) {
-    await restoreCache(config.externalCache[name])
+    await restoreCache(config.externalCache[name], true)
   }
 }
 
@@ -59,14 +60,19 @@ async function setupBazelrc () {
   }
 }
 
-async function restoreCache (cacheConfig) {
+async function restoreCache (cacheConfig, extract = false) {
   core.startGroup(`Restore cache for ${cacheConfig.name}`)
 
   const hash = await glob.hashFiles(cacheConfig.files.join('\n'))
   const name = cacheConfig.name
-  const paths = cacheConfig.paths
   const restoreKey = `${config.baseCacheKey}-${name}-`
   const key = `${restoreKey}${hash}`
+  let paths = []
+  if (extract) {
+    paths = [`${config.paths.bazelExternal}/${cacheConfig.name}`]
+  } else {
+    paths = cacheConfig.paths
+  }
 
   console.log(`Attempting to restore ${name} cache from ${key}`)
 
@@ -75,6 +81,22 @@ async function restoreCache (cacheConfig) {
     console.log(`Successfully restored cache from ${restoredKey}`)
     if (restoredKey !== key) {
       core.saveState(`${name}-cache-key`, key)
+    }
+
+    if (extract) {
+      console.log('Extracting...')
+      const globber = await glob.create(
+        `${config.paths.bazelExternal}/${cacheConfig.name}/*`,
+        { implicitDescendants: false }
+      )
+      const globbedPaths = await globber.glob()
+      console.log(globbedPaths)
+
+      for (const path of globbedPaths) {
+        console.log(`Moving ${path} up`)
+        await io.mv(path, config.paths.bazelExternal, { recursive: true })
+      }
+      await io.rmRF(`${config.paths.bazelExternal}/${cacheConfig.name}`)
     }
   } else {
     console.log(`Failed to restore ${name} cache`)

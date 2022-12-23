@@ -69918,6 +69918,7 @@ var __webpack_exports__ = {};
 const cache = __nccwpck_require__(7799)
 const core = __nccwpck_require__(2186)
 const glob = __nccwpck_require__(8090)
+const io = __nccwpck_require__(7436)
 const config = __nccwpck_require__(5532)
 
 async function run () {
@@ -69945,20 +69946,33 @@ async function saveExternalCache (cacheConfig) {
   )
   const paths = await globber.glob()
 
+  if (paths.length === 0) {
+    return
+  }
+
   console.log('[post.js:42] DEBUGGING STRING ==> 2')
   console.log(cacheConfig.paths.join('\n'))
   console.log('[post.js:48] DEBUGGING STRING ==> 0')
   console.log(paths)
   console.log('[post.js:50] DEBUGGING STRING ==> 3')
 
+  const knownPath = `${config.paths.bazelExternal}/${cacheConfig.name}`
+  console.log(`Known path is ${knownPath}`)
+  await io.mkdirP(knownPath)
+  for (const path of paths) {
+    console.log(`Copying ${path} to ${knownPath}`)
+    await io.cp(path, knownPath, { recursive: true })
+  }
+
   await saveCache(
-    paths,
+    [knownPath],
     core.getState(`${cacheConfig.name}-cache-key`)
   )
+  await io.rmRF(knownPath)
 }
 
 async function saveCache (paths, key) {
-  if (key.length === 0 || paths.length === 0) {
+  if (key.length === 0) {
     return
   }
 
