@@ -5,11 +5,11 @@ const io = require('@actions/io')
 const config = require('./config')
 
 async function run () {
-  // try {
-  await saveCaches()
-  // } catch (error) {
-  //   core.warning(error.stack)
-  // }
+  try {
+    await saveCaches()
+  } catch (error) {
+    core.warning(error.stack)
+  }
 }
 
 async function saveCaches () {
@@ -23,12 +23,13 @@ async function saveCaches () {
 }
 
 async function saveCache (cacheConfig) {
+  core.startGroup(`Save cache for ${cacheConfig.name}`)
+  let paths = cacheConfig.paths
   const key = core.getState(`${cacheConfig.name}-cache-key`)
   if (key.length === 0) {
     return
   }
 
-  let paths = cacheConfig.paths
   if (cacheConfig.packageTo) {
     const globber = await glob.create(
       paths.join('\n'),
@@ -40,7 +41,7 @@ async function saveCache (cacheConfig) {
       return
     }
 
-    console.log(`Packaging ${cacheConfig.name}`)
+    console.log(`Packaging cache contents to ${cacheConfig.packageTo}`)
     await io.mkdirP(cacheConfig.packageTo)
 
     for (const path of paths) {
@@ -51,8 +52,10 @@ async function saveCache (cacheConfig) {
     paths = [cacheConfig.packageTo]
   }
 
-  console.log(`Saving cache ${key}`)
+  console.log(`Attempting to save ${paths} cache to ${key}`)
   await cache.saveCache(paths, key)
+  console.log('Successfully saved cache')
+  core.endGroup()
 }
 
 run()
