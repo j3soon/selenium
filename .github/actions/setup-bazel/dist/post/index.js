@@ -69940,18 +69940,21 @@ async function saveCaches () {
 }
 
 async function saveExternalCache (cacheConfig) {
+  console.log('[post.js:26] DEBUGGING STRING ==> 2')
+  console.log(cacheConfig.paths.join('\n'))
   const globber = await glob.create(
     cacheConfig.paths.join('\n'),
     { implicitDescendants: false }
   )
+  console.log('[post.js:31] DEBUGGING STRING ==> 3')
   const paths = await globber.glob()
+  console.log('[post.js:33] DEBUGGING STRING ==> 4')
 
   if (paths.length === 0) {
     return
   }
 
   console.log('[post.js:42] DEBUGGING STRING ==> 2')
-  console.log(cacheConfig.paths.join('\n'))
   console.log('[post.js:48] DEBUGGING STRING ==> 0')
   console.log(paths)
   console.log('[post.js:50] DEBUGGING STRING ==> 3')
