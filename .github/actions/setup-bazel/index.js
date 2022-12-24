@@ -91,7 +91,6 @@ async function restoreCache (cacheConfig) {
         console.log(`Moving ${path} to ${config.paths.bazelExternal}`)
         await io.mv(path, config.paths.bazelExternal, { recursive: true })
       }
-      await io.rmRF(cacheConfig.packageTo)
     }
   } else {
     console.log(`Failed to restore ${name} cache`)
