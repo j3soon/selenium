@@ -92,11 +92,9 @@ async function restoreCache (cacheConfig) {
 
       await io.mkdirP(config.paths.bazelExternal)
       for (const path of globbedPaths) {
-        console.log(`Copying ${path} to ${config.paths.bazelExternal}`)
-        await io.cp(path, config.paths.bazelExternal, { recursive: true })
+        console.log(`Moving ${path} to ${config.paths.bazelExternal}`)
+        await io.mv(path, config.paths.bazelExternal, { recursive: true })
       }
-      console.log(`Removing ${cacheConfig.packageTo}`)
-      await io.rmRF(cacheConfig.packageTo)
     }
   } else {
     console.log(`Failed to restore ${name} cache`)
