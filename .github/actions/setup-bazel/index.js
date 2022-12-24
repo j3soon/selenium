@@ -1,5 +1,4 @@
 const fs = require('fs')
-const exec = require('@actions/exec')
 const core = require('@actions/core')
 const cache = require('@actions/cache')
 const glob = require('@actions/glob')
@@ -19,7 +18,6 @@ async function setupBazel () {
   console.log('Configuration:')
   console.log(JSON.stringify(config, null, 2))
 
-  await optimizeCacheOnWindows()
   await setupBazelrc()
   core.endGroup()
 
@@ -38,16 +36,6 @@ async function setupBazel () {
   for (const name in config.externalCache) {
     await restoreCache(config.externalCache[name])
   }
-}
-
-async function optimizeCacheOnWindows () {
-  if (config.platform !== 'win32') {
-
-  }
-
-  // Bazel relies heavily on symlinks.
-  // console.log('Enabling native symlinks support')
-  // core.exportVariable('MSYS', 'winsymlinks:native')
 }
 
 async function setupBazelrc () {
@@ -87,8 +75,6 @@ async function restoreCache (cacheConfig) {
         { implicitDescendants: false }
       )
       const globbedPaths = await globber.glob()
-
-      await exec.exec(`ls -lR ${cacheConfig.packageTo}`)
 
       await io.mkdirP(config.paths.bazelExternal)
       for (const path of globbedPaths) {
