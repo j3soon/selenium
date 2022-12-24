@@ -27,7 +27,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        target: [ 'unit-test' ]
+        target: [ 'remote-chrome-test' ]
         os: [ 'ubuntu-latest', 'windows-latest'  ]
     steps:
       - name: Checkout source tree
