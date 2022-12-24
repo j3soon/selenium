@@ -1,4 +1,5 @@
 const fs = require('fs')
+const exec = require('@actions/exec')
 const core = require('@actions/core')
 const cache = require('@actions/cache')
 const glob = require('@actions/glob')
@@ -87,9 +88,11 @@ async function restoreCache (cacheConfig) {
       )
       const globbedPaths = await globber.glob()
 
+      await exec.exec(`ls -lR ${cacheConfig.packageTo}`)
+
       await io.mkdirP(config.paths.bazelExternal)
       for (const path of globbedPaths) {
-        console.log(`Moving ${path} to ${config.paths.bazelExternal}`)
+        console.log(`Copying ${path} to ${config.paths.bazelExternal}`)
         await io.cp(path, config.paths.bazelExternal, { recursive: true })
       }
       console.log(`Removing ${cacheConfig.packageTo}`)
