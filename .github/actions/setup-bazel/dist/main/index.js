@@ -69962,12 +69962,12 @@ async function setupBazel () {
 
 async function optimizeCacheOnWindows () {
   if (config.platform !== 'win32') {
-    return
+
   }
 
   // Bazel relies heavily on symlinks.
-  console.log('Enabling native symlinks support')
-  core.exportVariable('MSYS', 'winsymlinks:native')
+  // console.log('Enabling native symlinks support')
+  // core.exportVariable('MSYS', 'winsymlinks:native')
 }
 
 async function setupBazelrc () {
