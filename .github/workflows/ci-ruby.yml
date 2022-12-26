@@ -116,10 +116,7 @@ jobs:
         with:
           edge-version: stable
       - name: Run Edge tests
-        uses: ./.github/actions/bazel
-        with:
-          command: test --cache_test_results=no --test_output=all //rb:${{ matrix.target }}
-          attempts: 3
+        run: bazel test --cache_test_results=no --test_output=all //rb:${{ matrix.target }}
 
   firefox-test:
     # if: ${{ needs.check_workflow.outputs.result == 'true' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || contains(toJson(github.event.commits), '[run ruby]') == true }}
@@ -174,10 +171,7 @@ jobs:
         if: matrix.os == 'windows-latest'
         run: Set-DisplayResolution -Width 1920 -Height 1080 -Force
       - name: Run Firefox tests
-        uses: ./.github/actions/bazel
-        with:
-          command: test --cache_test_results=no --test_output=all //rb:${{ matrix.target }}
-          attempts: 3
+        run: bazel test --cache_test_results=no --test_output=all //rb:${{ matrix.target }}
         env:
           DISPLAY: :99
 
@@ -207,9 +201,7 @@ jobs:
             rust_*_tools: WORKSPACE
           repository-cache: true
       - name: Run docs tests
-        uses: ./.github/actions/bazel
-        with:
-          command: run //rb:docs
+        run: bazel run //rb:docs
 
   lint:
     # if: ${{ needs.check_workflow.outputs.result == 'true' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || contains(toJson(github.event.commits), '[run ruby]') == true }}
@@ -237,9 +229,7 @@ jobs:
             rust_*_tools: WORKSPACE
           repository-cache: true
       - name: Run lint tests
-        uses: ./.github/actions/bazel
-        with:
-          command: run //rb:lint
+        run: bazel run //rb:lint
 
   unit-test:
     # if: ${{ needs.check_workflow.outputs.result == 'true' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || contains(toJson(github.event.commits), '[run ruby]') == true }}
@@ -277,6 +267,4 @@ jobs:
             rust_*_tools: WORKSPACE
           repository-cache: true
       - name: Run unit tests
-        uses: ./.github/actions/bazel
-        with:
-          command: test --cache_test_results=no --test_output=all //rb:unit-test
+        run: bazel test --cache_test_results=no --test_output=all //rb:unit-test
