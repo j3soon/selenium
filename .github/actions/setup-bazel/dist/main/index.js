@@ -35,13 +35,15 @@ switch (platform) {
 const bazelrc = core.getMultilineInput('bazelrc')
 
 const diskCacheConfig = core.getInput('disk-cache')
+const diskCacheEnabled = diskCacheConfig.length > 0
 let diskCacheName = 'disk'
-if (diskCacheConfig.length > 0) {
+if (diskCacheEnabled) {
   bazelrc.push(`build --disk_cache=${bazelDisk}`)
   diskCacheName = `${diskCacheName}-${diskCacheConfig}`
 }
 
-if (core.getBooleanInput('repository-cache')) {
+const repositoryCacheEnabled = core.getBooleanInput('repository-cache')
+if (repositoryCacheEnabled) {
   bazelrc.push(`build --repository_cache=${bazelRepository}`)
 }
 
@@ -74,12 +76,14 @@ if (externalCacheConfig) {
 module.exports = {
   baseCacheKey: `setup-bazel-${cacheVersion}-${os.platform()}`,
   bazeliskCache: {
+    enabled: core.getBooleanInput('bazelisk-cache'),
     files: ['.bazelversion'],
     name: 'bazelisk',
     paths: [core.toPosixPath(`${userCacheDir}/bazelisk`)]
   },
   bazelrc,
   diskCache: {
+    enabled: diskCacheEnabled,
     files: [
       '**/BUILD.bazel',
       '**/BUILD',
@@ -96,6 +100,7 @@ module.exports = {
     bazelrc: core.toPosixPath(`${homeDir}/.bazelrc`)
   },
   repositoryCache: {
+    enabled: repositoryCacheEnabled,
     files: [
       '**/BUILD.bazel',
       '**/BUILD',
@@ -69944,15 +69949,15 @@ async function setupBazel () {
   await setupBazelrc()
   core.endGroup()
 
-  if (core.getBooleanInput('bazelisk-cache')) {
+  if (config.bazeliskCache.enabled) {
     await restoreCache(config.bazeliskCache)
   }
 
-  if (core.getBooleanInput('disk-cache')) {
+  if (config.diskCache.enabled) {
     await restoreCache(config.diskCache)
   }
 
-  if (core.getBooleanInput('repository-cache')) {
+  if (config.repositoryCache.enabled) {
     await restoreCache(config.repositoryCache)
   }
 
