@@ -36,7 +36,7 @@ jobs:
         uses: ./.github/actions/setup-bazel
         with:
           bazelisk-cache: true
-          disk-cache: true
+          disk-cache: remote-chrome-test
           external-cache: |
             crates: rust/Cargo.Bazel.lock
             go_sdk: WORKSPACE

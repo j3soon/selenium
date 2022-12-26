@@ -28,8 +28,11 @@ switch (platform) {
 
 const bazelrc = core.getMultilineInput('bazelrc')
 
-if (core.getBooleanInput('disk-cache')) {
+const diskCacheConfig = core.getInput('disk-cache')
+let diskCacheName = 'disk'
+if (diskCacheConfig.length > 0) {
   bazelrc.push(`build --disk_cache=${bazelDisk}`)
+  diskCacheName = `${diskCacheName}-${diskCacheConfig}`
 }
 
 if (core.getBooleanInput('repository-cache')) {
@@ -77,7 +80,7 @@ module.exports = {
       'WORKSPACE.bazel',
       'WORKSPACE'
     ],
-    name: 'disk',
+    name: diskCacheName,
     paths: [bazelDisk]
   },
   externalCache,
