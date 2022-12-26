@@ -19,63 +19,44 @@
 
 module Selenium
   module WebDriver
-    module Firefox
+    module Chromium
 
       #
-      # Driver implementation for Firefox using GeckoDriver.
+      # Driver implementation for Chrome.
       # @api private
       #
 
       class Driver < WebDriver::Driver
-        EXTENSIONS = [DriverExtensions::HasAddons,
-                      DriverExtensions::FullPageScreenshot,
-                      DriverExtensions::HasContext,
+        EXTENSIONS = [DriverExtensions::HasCDP,
                       DriverExtensions::HasBiDi,
-                      DriverExtensions::HasDevTools,
-                      DriverExtensions::HasLogEvents,
+                      DriverExtensions::HasCasting,
+                      DriverExtensions::HasNetworkConditions,
                       DriverExtensions::HasNetworkInterception,
                       DriverExtensions::HasWebStorage,
+                      DriverExtensions::HasLaunching,
+                      DriverExtensions::HasLocation,
+                      DriverExtensions::HasPermissions,
+                      DriverExtensions::DownloadsFiles,
+                      DriverExtensions::HasDevTools,
+                      DriverExtensions::HasAuthentication,
+                      DriverExtensions::HasLogs,
+                      DriverExtensions::HasLogEvents,
+                      DriverExtensions::HasPinnedScripts,
                       DriverExtensions::PrintsPage].freeze
 
-        def initialize(capabilities: nil, options: nil, service: nil, url: nil, **opts)
-          raise ArgumentError, "Can't initialize #{self.class} with :url" if url
-
-          caps = process_options(options, capabilities)
-          url = service_url(service || Service.firefox)
-          super(caps: caps, url: url, **opts)
-        end
-
-        def browser
-          :firefox
-        end
-
-        private
+        protected
 
         def devtools_url
-          if capabilities['moz:debuggerAddress'].nil?
-            raise(Error::WebDriverError, "DevTools is not supported by this version of Firefox; use v85 or higher")
-          end
-
-          uri = URI("http://#{capabilities['moz:debuggerAddress']}")
+          uri = URI(devtools_address)
           response = Net::HTTP.get(uri.hostname, '/json/version', uri.port)
 
           JSON.parse(response)['webSocketDebuggerUrl']
         end
 
         def devtools_version
-          Firefox::DEVTOOLS_VERSION
-        end
-
-        def process_options(options, capabilities)
-          if options && !options.is_a?(Options)
-            raise ArgumentError, ":options must be an instance of #{Options}"
-          elsif options.nil? && capabilities.nil?
-            options = Options.new
-          end
-
-          super(options, capabilities)
+          Integer(capabilities.browser_version.split('.').first)
         end
       end # Driver
-    end # Firefox
+    end # Chromium
   end # WebDriver
 end # Selenium
