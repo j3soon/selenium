@@ -90,7 +90,7 @@ jobs:
           java-version: '11'
           distribution: 'temurin'
       - name: Run small tests
-        run: bazel test --test_tag_filters "small,-lint" //java/...
+        run: bazel test --test_size_filters "small" --test_tag_filters "-lint" //java/...
       - name: Sonar Scanner
         uses: ./.github/actions/sonar-cloud
         env:
@@ -131,7 +131,7 @@ jobs:
           java-version: '11'
           distribution: 'temurin'
       - name: Run medium tests
-        run: bazel test --test_tag_filters "medium,-lint" --flaky_test_attempts 3 //java/...
+        run: bazel test --test_size_filters "medium" --test_tag_filters "-lint" --flaky_test_attempts 3 //java/...
 
   lint:
     # if: ${{ needs.check_workflow.outputs.result == 'true' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || contains(toJson(github.event.commits), '[run java]') == true }}
@@ -289,7 +289,9 @@ jobs:
       - name: Start Fluxbox
         run: fluxbox -display :99 &
       - name: Run server tests
-        run: bazel test --test_tag_filters "${{ matrix.browser }},remote" --flaky_test_attempts 3 //java/...
+        run: |
+          bazel query "attr(tags, ${{ matrix.browser }}, tests(//java/...)) intersect attr(tags, 'remote', tests(//java/...))" |
+            xargs bazel test
         env:
           DISPLAY: :99
 
