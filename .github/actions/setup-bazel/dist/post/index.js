@@ -70067,6 +70067,7 @@ module.exports = JSON.parse('[[[0,44],"disallowed_STD3_valid"],[[45,46],"valid"]
 var __webpack_exports__ = {};
 // This entry need to be wrapped in an IIFE because it need to be isolated against other modules in the chunk.
 (() => {
+const p = __nccwpck_require__(1017)
 const cache = __nccwpck_require__(7799)
 const core = __nccwpck_require__(2186)
 const getFolderSize = __nccwpck_require__(5838)
@@ -70088,7 +70089,38 @@ async function saveCaches () {
   await saveCache(config.repositoryCache)
 
   if (config.externalCache.enabled) {
-    await saveExeternalCaches(config.externalCache)
+    await saveExternalCaches(config.externalCache)
+  }
+}
+
+async function saveExternalCaches (cacheConfig) {
+  const globber = await glob.create(
+    `${config.paths.bazelExternal}/*`,
+    { implicitDescendants: false }
+  )
+  const paths = await globber.glob()
+
+  for (const path of paths) {
+    console.log(path)
+    getFolderSize(path, (err, size) => {
+      if (err) {
+        throw err
+      }
+
+      const sizeMB = (size / 1024 / 1024).toFixed(2)
+      console.log(sizeMB + ' MB')
+      if (sizeMB >= 10) {
+        const name = p.basename(path)
+        saveCache({
+          files: cacheConfig[name]?.files || ['WORKSPACE'],
+          name: `external-${name}`,
+          paths: [
+            `${config.paths.bazelExternal}/@${name}.marker`,
+            `${config.paths.bazelExternal}/${name}`
+          ]
+        })
+      }
+    })
   }
 }
 

@@ -1,3 +1,4 @@
+const p = require('path')
 const cache = require('@actions/cache')
 const core = require('@actions/core')
 const getFolderSize = require('get-folder-size')
@@ -19,7 +20,38 @@ async function saveCaches () {
   await saveCache(config.repositoryCache)
 
   if (config.externalCache.enabled) {
-    await saveExeternalCaches(config.externalCache)
+    await saveExternalCaches(config.externalCache)
+  }
+}
+
+async function saveExternalCaches (cacheConfig) {
+  const globber = await glob.create(
+    `${config.paths.bazelExternal}/*`,
+    { implicitDescendants: false }
+  )
+  const paths = await globber.glob()
+
+  for (const path of paths) {
+    console.log(path)
+    getFolderSize(path, (err, size) => {
+      if (err) {
+        throw err
+      }
+
+      const sizeMB = (size / 1024 / 1024).toFixed(2)
+      console.log(sizeMB + ' MB')
+      if (sizeMB >= 10) {
+        const name = p.basename(path)
+        saveCache({
+          files: cacheConfig[name]?.files || ['WORKSPACE'],
+          name: `external-${name}`,
+          paths: [
+            `${config.paths.bazelExternal}/@${name}.marker`,
+            `${config.paths.bazelExternal}/${name}`
+          ]
+        })
+      }
+    })
   }
 }
 
