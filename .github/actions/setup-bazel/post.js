@@ -1,5 +1,6 @@
 const cache = require('@actions/cache')
 const core = require('@actions/core')
+const getFolderSize = require('get-folder-size')
 const glob = require('@actions/glob')
 const io = require('@actions/io')
 const config = require('./config')
@@ -17,8 +18,8 @@ async function saveCaches () {
   await saveCache(config.diskCache)
   await saveCache(config.repositoryCache)
 
-  for (const name in config.externalCache) {
-    await saveCache(config.externalCache[name])
+  if (config.externalCache.enabled) {
+    await saveExeternalCaches(config.externalCache)
   }
 }
 

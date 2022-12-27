@@ -47075,6 +47075,80 @@ DelayedStream.prototype._checkIfMaxDataSizeExceeded = function() {
 
 /***/ }),
 
+/***/ 5838:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+"use strict";
+
+
+const fs = __nccwpck_require__(7147);
+const path = __nccwpck_require__(1017);
+const eachAsync = __nccwpck_require__(3970);
+
+function readSizeRecursive(seen, item, ignoreRegEx, callback) {
+  let cb;
+  let ignoreRegExp;
+
+  if (!callback) {
+    cb = ignoreRegEx;
+    ignoreRegExp = null;
+  } else {
+    cb = callback;
+    ignoreRegExp = ignoreRegEx;
+  }
+
+  fs.lstat(item, function lstat(e, stats) {
+    let total = !e ? (stats.size || 0) : 0;
+
+    if (stats) {
+      if (seen.has(stats.ino)) { return cb(null, 0); }
+
+      seen.add(stats.ino);
+    }
+
+    if (!e && stats.isDirectory()) {
+      fs.readdir(item, (err, list) => {
+        if (err) { return cb(err); }
+
+        eachAsync(
+          list,
+          5000,
+          (dirItem, next) => {
+            readSizeRecursive(
+              seen,
+              path.join(item, dirItem),
+              ignoreRegExp,
+              (error, size) => {
+                if (!error) { total += size; }
+
+                next(error);
+              }
+            );
+          },
+          (finalErr) => {
+            cb(finalErr, total);
+          }
+        );
+      });
+    } else {
+      if (ignoreRegExp && ignoreRegExp.test(item)) {
+        total = 0;
+      }
+
+      cb(e, total);
+    }
+  });
+}
+
+module.exports = (...args) => {
+  args.unshift(new Set());
+
+  return readSizeRecursive(...args);
+};
+
+
+/***/ }),
+
 /***/ 7426:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
@@ -54017,6 +54091,73 @@ function coerce (version, options) {
     '.' + (match[3] || '0') +
     '.' + (match[4] || '0'), options)
 }
+
+
+/***/ }),
+
+/***/ 3970:
+/***/ ((module) => {
+
+"use strict";
+/* eslint-disable no-use-before-define */
+
+
+module.exports = function eachAsync(arr, parallelLimit, iteratorFn, cb) {
+  var pending = 0;
+  var index = 0;
+  var lastIndex = arr.length - 1;
+  var called = false;
+  var limit;
+  var callback;
+  var iterate;
+
+  if (typeof parallelLimit === 'number') {
+    limit = parallelLimit;
+    iterate = iteratorFn;
+    callback = cb || function noop() {};
+  } else {
+    iterate = parallelLimit;
+    callback = iteratorFn || function noop() {};
+    limit = arr.length;
+  }
+
+  if (!arr.length) { return callback(); }
+
+  var iteratorLength = iterate.length;
+
+  var shouldCallNextIterator = function shouldCallNextIterator() {
+    return (!called && (pending < limit) && (index < lastIndex));
+  };
+
+  var iteratorCallback = function iteratorCallback(err) {
+    if (called) { return; }
+
+    pending--;
+
+    if (err || (index === lastIndex && !pending)) {
+      called = true;
+
+      callback(err);
+    } else if (shouldCallNextIterator()) {
+      processIterator(++index);
+    }
+  };
+
+  var processIterator = function processIterator() {
+    pending++;
+
+    var args = (iteratorLength === 2) ? [arr[index], iteratorCallback]
+                                      : [arr[index], index, iteratorCallback];
+
+    iterate.apply(null, args);
+
+    if (shouldCallNextIterator()) {
+      processIterator(++index);
+    }
+  };
+
+  processIterator();
+};
 
 
 /***/ }),
@@ -69928,6 +70069,7 @@ var __webpack_exports__ = {};
 (() => {
 const cache = __nccwpck_require__(7799)
 const core = __nccwpck_require__(2186)
+const getFolderSize = __nccwpck_require__(5838)
 const glob = __nccwpck_require__(8090)
 const io = __nccwpck_require__(7436)
 const config = __nccwpck_require__(5532)
@@ -69945,8 +70087,8 @@ async function saveCaches () {
   await saveCache(config.diskCache)
   await saveCache(config.repositoryCache)
 
-  for (const name in config.externalCache) {
-    await saveCache(config.externalCache[name])
+  if (config.externalCache.enabled) {
+    await saveExeternalCaches(config.externalCache)
   }
 }
 

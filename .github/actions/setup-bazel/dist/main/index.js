@@ -72936,9 +72936,8 @@ async function restoreExternalCaches (cacheConfig) {
   const { data: { actions_caches: caches } } = await octokit.rest.actions.getActionsCacheList({
     ...context.repo
   })
-  console.log(caches)
   const regexp = new RegExp(`^${config.baseCacheKey}-external-(?<name>.+)-[a-z0-9]+$`)
-  // const regexp = new RegExp('^setup-bazel-1-linux-external-(?<name>.+)-[a-z0-9]+$')
+  console.log(caches)
   console.log(regexp)
 
   for (const cache of caches) {
@@ -72946,7 +72945,7 @@ async function restoreExternalCaches (cacheConfig) {
     if (match) {
       const name = match.groups.name
       await restoreCache({
-        files: config.externalCache[name] || ['WORKSPACE'],
+        files: cacheConfig[name]?.files || ['WORKSPACE'],
         name: `external-${name}`,
         paths: [
           `${config.paths.bazelExternal}/@${name}.marker`,
