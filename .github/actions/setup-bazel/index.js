@@ -1,6 +1,7 @@
 const fs = require('fs')
 const core = require('@actions/core')
 const cache = require('@actions/cache')
+const github = require('@actions/github')
 const glob = require('@actions/glob')
 const io = require('@actions/io')
 const config = require('./config')
@@ -21,20 +22,20 @@ async function setupBazel () {
   await setupBazelrc()
   core.endGroup()
 
-  if (config.bazeliskCache.enabled) {
-    await restoreCache(config.bazeliskCache)
-  }
+  // if (config.bazeliskCache.enabled) {
+  //   await restoreCache(config.bazeliskCache)
+  // }
 
-  if (config.diskCache.enabled) {
-    await restoreCache(config.diskCache)
-  }
+  // if (config.diskCache.enabled) {
+  //   await restoreCache(config.diskCache)
+  // }
 
-  if (config.repositoryCache.enabled) {
-    await restoreCache(config.repositoryCache)
-  }
+  // if (config.repositoryCache.enabled) {
+  //   await restoreCache(config.repositoryCache)
+  // }
 
-  for (const name in config.externalCache) {
-    await restoreCache(config.externalCache[name])
+  if (config.externalCache.enabled) {
+    await restoreExternalCaches(config.externalCache)
   }
 }
 
@@ -47,6 +48,39 @@ async function setupBazelrc () {
   for (const line of config.bazelrc) {
     fs.appendFileSync(config.paths.bazelrc, `${line}\n`)
   }
+}
+
+async function restoreExternalCaches (cacheConfig) {
+  const context = github.context
+  const octokit = github.getOctokit(config.token)
+  const { data: { actions_caches: caches } } = await octokit.rest.actions.getActionsCacheList({
+    ...context.repo
+  })
+  console.log(caches)
+  const regexp = new RegExp(`^${config.baseCacheKey}-external-(?<name>.+)-[a-z0-9]+$`)
+  // const regexp = new RegExp('^setup-bazel-1-linux-external-(?<name>.+)-[a-z0-9]+$')
+  console.log(regexp)
+
+  for (const cache of caches) {
+    const match = cache.key.match(regexp)
+    if (match) {
+      const name = match.groups.name
+      await restoreCache({
+        files: config.externalCache[name] || ['WORKSPACE'],
+        name: `external-${name}`,
+        paths: [
+          `${config.paths.bazelExternal}/@${name}.marker`,
+          `${config.paths.bazelExternal}/${name}`
+        ]
+      })
+    }
+    // const name = key.
+    // if cache.key.startsWith(`${config.baseCacheKey}-external`) {
+    //   const name =
+    // }
+  }
+
+  // console.log(caches)
 }
 
 async function restoreCache (cacheConfig) {

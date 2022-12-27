@@ -54,21 +54,21 @@ if (googleCredentials.length > 0 && !googleCredentialsSaved) {
 const bazelExternal = core.toPosixPath(`${bazelOutputBase}/external`)
 const externalCache = {}
 if (externalCacheConfig) {
+  externalCache.enabled = true
   for (const name in externalCacheConfig) {
     externalCache[name] = {
       files: Array(externalCacheConfig[name]).flat(),
-      name: `external-${name.replace('*', '')}`,
-      packageTo: core.toPosixPath(`${externalTmp}/${name.replace('*', '')}`),
-      paths: [
-        `${bazelExternal}/@${name}.marker`,
-        `${bazelExternal}/${name}`
-      ]
+      name: `external-${name}`
+      // paths: [
+      //   `${bazelExternal}/@${name}.marker`,
+      //   `${bazelExternal}/${name}`
+      // ]
     }
   }
 }
 
 module.exports = {
-  baseCacheKey: `setup-bazel-${cacheVersion}-${os.platform()}`,
+  baseCacheKey: `setup-bazel-${cacheVersion}-${platform}`,
   bazeliskCache: {
     enabled: core.getBooleanInput('bazelisk-cache'),
     files: ['.bazelversion'],
@@ -104,5 +104,5 @@ module.exports = {
     name: 'repository',
     paths: [bazelRepository]
   },
-  platform
+  token: core.getInput('token')
 }
