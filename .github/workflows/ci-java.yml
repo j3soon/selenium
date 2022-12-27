@@ -16,67 +16,80 @@ env:
   NODE_VERSION: '16.x'
 
 jobs:
-  check_workflow:
-    permissions:
-      contents: none
-    uses: ./.github/workflows/should-workflow-run.yml
-    with:
-      bazel-target-prefix: '//java'
+  # check_workflow:
+  #   permissions:
+  #     contents: none
+  #   uses: ./.github/workflows/should-workflow-run.yml
+  #   with:
+  #     bazel-target-prefix: '//java'
 
   build:
-    if: ${{ needs.check_workflow.outputs.result == 'true' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || contains(toJson(github.event.commits), '[java]') == true }}
-    needs: check_workflow
+    # if: ${{ needs.check_workflow.outputs.result == 'true' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || contains(toJson(github.event.commits), '[java]') == true }}
+    # needs: check_workflow
     runs-on: ubuntu-latest
     steps:
       - name: Checkout source tree
         uses: actions/checkout@v3
-      - name: Cache Bazel artifacts
-        uses: actions/cache@v3
+      - name: Setup Bazel
+        uses: ./.github/actions/setup-bazel
         with:
-          path: |
-            ~/.cache/bazel-disk
-            ~/.cache/bazel-repo
-          key: ${{ runner.os }}-bazel-build-${{ hashFiles('**/BUILD.bazel') }}
-          restore-keys: |
-            ${{ runner.os }}-bazel-build-
+          bazelisk-cache: true
+          disk-cache: java
+          external-cache: |
+            crates: rust/Cargo.Bazel.lock
+            go_sdk: WORKSPACE
+            nodejs_*: WORKSPACE
+            npm: package-lock.json
+            pypi__pip: py/requirements_lock.txt
+            python_3_*: WORKSPACE
+            remote_java_tools: WORKSPACE
+            remotejdk11_*: WORKSPACE
+            rules_ruby_dist: rb/ruby_version.bzl
+            rules_rust: WORKSPACE
+            rust_*_tools: WORKSPACE
+          repository-cache: true
       - name: Setup Java
         uses: actions/setup-java@v3
         with:
           java-version: '11'
           distribution: 'temurin'
       - name: Build grid
-        uses: ./.github/actions/bazel
-        with:
-          command: build grid
+        run: bazel build grid
 
   small_tests:
-    if: ${{ needs.check_workflow.outputs.result == 'true' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || contains(toJson(github.event.commits), '[run java]') == true }}
-    needs: [ check_workflow, build ]
+    # if: ${{ needs.check_workflow.outputs.result == 'true' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || contains(toJson(github.event.commits), '[run java]') == true }}
+    # needs: [ check_workflow, build ]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout source tree
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
-      - name: Cache Bazel artifacts
-        uses: actions/cache@v3
+      - name: Setup Bazel
+        uses: ./.github/actions/setup-bazel
         with:
-          path: |
-            ~/.cache/bazel-disk
-            ~/.cache/bazel-repo
-          key: ${{ runner.os }}-bazel-small-tests-${{ hashFiles('**/BUILD.bazel') }}
-          restore-keys: |
-            ${{ runner.os }}-bazel-small-tests-
-            ${{ runner.os }}-bazel-build-
+          bazelisk-cache: true
+          disk-cache: java
+          external-cache: |
+            crates: rust/Cargo.Bazel.lock
+            go_sdk: WORKSPACE
+            nodejs_*: WORKSPACE
+            npm: package-lock.json
+            pypi__pip: py/requirements_lock.txt
+            python_3_*: WORKSPACE
+            remote_java_tools: WORKSPACE
+            remotejdk11_*: WORKSPACE
+            rules_ruby_dist: rb/ruby_version.bzl
+            rules_rust: WORKSPACE
+            rust_*_tools: WORKSPACE
+          repository-cache: true
       - name: Setup Java
         uses: actions/setup-java@v3
         with:
           java-version: '11'
           distribution: 'temurin'
       - name: Run small tests
-        uses: ./.github/actions/bazel-test
-        with:
-          query: attr(size, small, tests(//java/...)) except attr(tags, lint, tests(//java/...))
+        run: bazel test --test_tag_filters "small,-lint" //java/...
       - name: Sonar Scanner
         uses: ./.github/actions/sonar-cloud
         env:
@@ -84,65 +97,77 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
   medium_tests:
-    if: ${{ needs.check_workflow.outputs.result == 'true' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || contains(toJson(github.event.commits), '[run java]') == true }}
-    needs: [ check_workflow, small_tests ]
+    # if: ${{ needs.check_workflow.outputs.result == 'true' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || contains(toJson(github.event.commits), '[run java]') == true }}
+    # needs: [ check_workflow, small_tests ]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout source tree
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
-      - name: Cache Bazel artifacts
-        uses: actions/cache@v3
+      - name: Setup Bazel
+        uses: ./.github/actions/setup-bazel
         with:
-          path: |
-            ~/.cache/bazel-disk
-            ~/.cache/bazel-repo
-          key: ${{ runner.os }}-bazel-medium-tests-${{ hashFiles('**/BUILD.bazel') }}
-          restore-keys: |
-            ${{ runner.os }}-bazel-medium-tests-
-            ${{ runner.os }}-bazel-build-
+          bazelisk-cache: true
+          disk-cache: java
+          external-cache: |
+            crates: rust/Cargo.Bazel.lock
+            go_sdk: WORKSPACE
+            nodejs_*: WORKSPACE
+            npm: package-lock.json
+            pypi__pip: py/requirements_lock.txt
+            python_3_*: WORKSPACE
+            remote_java_tools: WORKSPACE
+            remotejdk11_*: WORKSPACE
+            rules_ruby_dist: rb/ruby_version.bzl
+            rules_rust: WORKSPACE
+            rust_*_tools: WORKSPACE
+          repository-cache: true
       - name: Setup Java
         uses: actions/setup-java@v3
         with:
           java-version: '11'
           distribution: 'temurin'
       - name: Run medium tests
-        uses: ./.github/actions/bazel-test
-        with:
-          query: attr(size, medium, tests(//java/...)) except attr(tags, lint, tests(//java/...))
-          attempts: 3
+        run: bazel test --test_tag_filters "medium,-lint" --flaky_test_attempts 3 //java/...
 
   lint:
-    if: ${{ needs.check_workflow.outputs.result == 'true' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || contains(toJson(github.event.commits), '[run java]') == true }}
-    needs: [ check_workflow, build ]
+    # if: ${{ needs.check_workflow.outputs.result == 'true' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || contains(toJson(github.event.commits), '[run java]') == true }}
+    # needs: [ check_workflow, build ]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout source tree
         uses: actions/checkout@v3
-      - name: Cache Bazel artifacts
-        uses: actions/cache@v3
+      - name: Setup Bazel
+        uses: ./.github/actions/setup-bazel
         with:
-          path: |
-            ~/.cache/bazel-disk
-            ~/.cache/bazel-repo
-          key: ${{ runner.os }}-bazel-lint-${{ hashFiles('**/BUILD.bazel') }}
-          restore-keys: |
-            ${{ runner.os }}-bazel-lint-
-            ${{ runner.os }}-bazel-build-
+          bazelisk-cache: true
+          disk-cache: java
+          external-cache: |
+            crates: rust/Cargo.Bazel.lock
+            go_sdk: WORKSPACE
+            nodejs_*: WORKSPACE
+            npm: package-lock.json
+            pypi__pip: py/requirements_lock.txt
+            python_3_*: WORKSPACE
+            remote_java_tools: WORKSPACE
+            remotejdk11_*: WORKSPACE
+            rules_ruby_dist: rb/ruby_version.bzl
+            rules_rust: WORKSPACE
+            rust_*_tools: WORKSPACE
+          repository-cache: true
       - name: Setup Java
         uses: actions/setup-java@v3
         with:
           java-version: '11'
           distribution: 'temurin'
       - name: Run linter
-        uses: ./.github/actions/bazel-test
-        with:
-          query: attr(tags, lint, tests(//java/...)) except attr(tags, no-lint, tests(//java/...))
+        run: bazel test --test_tag_filters "lint,-no-lint" //java/...
 
   browser_tests:
-    if: ${{ needs.check_workflow.outputs.result == 'true' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || contains(toJson(github.event.commits), '[run java]') == true }}
-    needs: [ check_workflow, small_tests ]
+    # if: ${{ needs.check_workflow.outputs.result == 'true' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || contains(toJson(github.event.commits), '[run java]') == true }}
+    # needs: [ check_workflow, small_tests ]
+    needs: [ small_tests ]
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -155,16 +180,24 @@ jobs:
     steps:
       - name: Checkout source tree
         uses: actions/checkout@v3
-      - name: Cache Bazel artifacts
-        uses: actions/cache@v3
+      - name: Setup Bazel
+        uses: ./.github/actions/setup-bazel
         with:
-          path: |
-            ~/.cache/bazel-disk
-            ~/.cache/bazel-repo
-          key: ${{ runner.os }}-bazel-${{ matrix.browser }}-tests-${{ hashFiles('**/BUILD.bazel') }}
-          restore-keys: |
-            ${{ runner.os }}-bazel-${{ matrix.browser }}-tests-
-            ${{ runner.os }}-bazel-build-
+          bazelisk-cache: true
+          disk-cache: java
+          external-cache: |
+            crates: rust/Cargo.Bazel.lock
+            go_sdk: WORKSPACE
+            nodejs_*: WORKSPACE
+            npm: package-lock.json
+            pypi__pip: py/requirements_lock.txt
+            python_3_*: WORKSPACE
+            remote_java_tools: WORKSPACE
+            remotejdk11_*: WORKSPACE
+            rules_ruby_dist: rb/ruby_version.bzl
+            rules_rust: WORKSPACE
+            rust_*_tools: WORKSPACE
+          repository-cache: true
       - name: Setup Fluxbox
         run: sudo apt-get -y install fluxbox
       - name: Setup Java
@@ -190,16 +223,14 @@ jobs:
       - name: Start Fluxbox
         run: fluxbox -display :99 &
       - name: Run browser tests in ${{ matrix.browser }}
-        uses: ./.github/actions/bazel-test
-        with:
-          query: attr(tags, ${{ matrix.browser }}, tests(//java/...)) except attr(tags, 'rc|remote', tests(//java/...))
-          attempts: 3
+        run: bazel test --test_tag_filters "${{ matrix.browser }},-rc,-remote" --flaky_test_attempts 3 //java/...
         env:
           DISPLAY: :99
 
   server_tests:
-    if: ${{ needs.check_workflow.outputs.result == 'true' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || contains(toJson(github.event.commits), '[run java]') == true }}
-    needs: [ check_workflow, small_tests ]
+    # if: ${{ needs.check_workflow.outputs.result == 'true' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || contains(toJson(github.event.commits), '[run java]') == true }}
+    # needs: [ check_workflow, small_tests ]
+    needs: [ small_tests ]
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -212,17 +243,24 @@ jobs:
     steps:
       - name: Checkout source tree
         uses: actions/checkout@v3
-      - name: Cache Bazel artifacts
-        uses: actions/cache@v3
+      - name: Setup Bazel
+        uses: ./.github/actions/setup-bazel
         with:
-          path: |
-            ~/.cache/bazel-disk
-            ~/.cache/bazel-repo
-          key: ${{ runner.os }}-bazel-${{ matrix.browser }}-server-tests-${{ hashFiles('**/BUILD.bazel') }}
-          restore-keys: |
-            ${{ runner.os }}-bazel-${{ matrix.browser }}-server-tests-
-            ${{ runner.os }}-bazel-${{ matrix.browser }}-tests-
-            ${{ runner.os }}-bazel-build-
+          bazelisk-cache: true
+          disk-cache: java
+          external-cache: |
+            crates: rust/Cargo.Bazel.lock
+            go_sdk: WORKSPACE
+            nodejs_*: WORKSPACE
+            npm: package-lock.json
+            pypi__pip: py/requirements_lock.txt
+            python_3_*: WORKSPACE
+            remote_java_tools: WORKSPACE
+            remotejdk11_*: WORKSPACE
+            rules_ruby_dist: rb/ruby_version.bzl
+            rules_rust: WORKSPACE
+            rust_*_tools: WORKSPACE
+          repository-cache: true
       - name: Setup Fluxbox
         run: sudo apt-get -y install fluxbox
       - name: Setup Java
@@ -248,30 +286,36 @@ jobs:
       - name: Start Fluxbox
         run: fluxbox -display :99 &
       - name: Run server tests
-        uses: ./.github/actions/bazel-test
-        with:
-          query: attr(tags, ${{ matrix.browser }}, tests(//java/...)) intersect attr(tags, 'remote', tests(//java/...))
-          attempts: 3
+        run: bazel test --test_tag_filters "${{ matrix.browser }},remote" --flaky_test_attempts 3 //java/...
         env:
           DISPLAY: :99
 
   rc_tests:
-    if: ${{ needs.check_workflow.outputs.result == 'true' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || contains(toJson(github.event.commits), '[run java]') == true }}
-    needs: [ check_workflow, small_tests ]
+    # if: ${{ needs.check_workflow.outputs.result == 'true' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || contains(toJson(github.event.commits), '[run java]') == true }}
+    # needs: [ check_workflow, small_tests ]
+    needs: [ small_tests ]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout source tree
         uses: actions/checkout@v3
-      - name: Cache Bazel artifacts
-        uses: actions/cache@v3
+      - name: Setup Bazel
+        uses: ./.github/actions/setup-bazel
         with:
-          path: |
-            ~/.cache/bazel-disk
-            ~/.cache/bazel-repo
-          key: ${{ runner.os }}-bazel-firefox-tests-${{ hashFiles('**/BUILD.bazel') }}
-          restore-keys: |
-            ${{ runner.os }}-bazel-firefox-tests-
-            ${{ runner.os }}-bazel-build-
+          bazelisk-cache: true
+          disk-cache: java
+          external-cache: |
+            crates: rust/Cargo.Bazel.lock
+            go_sdk: WORKSPACE
+            nodejs_*: WORKSPACE
+            npm: package-lock.json
+            pypi__pip: py/requirements_lock.txt
+            python_3_*: WORKSPACE
+            remote_java_tools: WORKSPACE
+            remotejdk11_*: WORKSPACE
+            rules_ruby_dist: rb/ruby_version.bzl
+            rules_rust: WORKSPACE
+            rust_*_tools: WORKSPACE
+          repository-cache: true
       - name: Setup Fluxbox
         run: sudo apt-get -y install fluxbox
       - name: Setup Java
@@ -291,30 +335,36 @@ jobs:
       - name: Start Fluxbox
         run: fluxbox -display :99 &
       - name: Run browser tests in Firefox
-        uses: ./.github/actions/bazel-test
-        with:
-          query: attr(tags, rc, tests(//java/...))
-          attempts: 3
+        run: bazel test --test_tag_filters "rc" --flaky_test_attempts 3 //java/...
         env:
           DISPLAY: :99
 
   javadoc:
-    if: ${{ needs.check_workflow.outputs.result == 'true' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || contains(toJson(github.event.commits), '[run java]') == true }}
-    needs: [ check_workflow, build ]
+    # if: ${{ needs.check_workflow.outputs.result == 'true' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || contains(toJson(github.event.commits), '[run java]') == true }}
+    # needs: [ check_workflow, build ]
+    needs: [ build ]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout source tree
         uses: actions/checkout@v3
-      - name: Cache Bazel artifacts
-        uses: actions/cache@v3
+      - name: Setup Bazel
+        uses: ./.github/actions/setup-bazel
         with:
-          path: |
-            ~/.cache/bazel-disk
-            ~/.cache/bazel-repo
-          key: ${{ runner.os }}-bazel-firefox-tests-${{ hashFiles('**/BUILD.bazel') }}
-          restore-keys: |
-            ${{ runner.os }}-bazel-firefox-tests-
-            ${{ runner.os }}-bazel-build-
+          bazelisk-cache: true
+          disk-cache: java
+          external-cache: |
+            crates: rust/Cargo.Bazel.lock
+            go_sdk: WORKSPACE
+            nodejs_*: WORKSPACE
+            npm: package-lock.json
+            pypi__pip: py/requirements_lock.txt
+            python_3_*: WORKSPACE
+            remote_java_tools: WORKSPACE
+            remotejdk11_*: WORKSPACE
+            rules_ruby_dist: rb/ruby_version.bzl
+            rules_rust: WORKSPACE
+            rust_*_tools: WORKSPACE
+          repository-cache: true
       - name: Setup Java
         uses: actions/setup-java@v3
         with:
